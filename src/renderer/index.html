@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; media-src 'self' mediastream:;" />
+  <title>JebToSendIt</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bezel">
+    <!-- pasek tytułu (przeciąganie okna) -->
+    <header class="titlebar">
+      <div class="brand">
+        <span class="bolt">⚡</span>
+        <span class="name">JEB<span class="accent">TO</span>SENDIT</span>
+        <span class="ver">v0.1</span>
+      </div>
+      <div class="winbtns">
+        <button id="btnMin" class="winbtn" title="Minimalizuj">—</button>
+        <button id="btnHide" class="winbtn hide" title="Schowaj do tray">⌄</button>
+        <button id="btnQuit" class="winbtn quit" title="Zamknij">✕</button>
+      </div>
+    </header>
+
+    <!-- listwa statusu + włącznik -->
+    <section class="statusbar">
+      <div class="led-wrap">
+        <span id="led" class="led"></span>
+        <span id="statusText" class="status-text">UŚPIONY</span>
+      </div>
+      <button id="armSwitch" class="arm-switch" aria-pressed="false">
+        <span class="knobball"></span>
+        <span class="arm-label">ARM</span>
+      </button>
+    </section>
+
+    <!-- centralny "scope" -->
+    <section class="scope-card">
+      <canvas id="scope" width="760" height="300"></canvas>
+      <div id="hitBadge" class="hit-badge">JEB!</div>
+    </section>
+
+    <!-- knoby -->
+    <section class="knobs">
+      <div class="knob-cell">
+        <div class="knob" id="knobThreshold" data-min="0.01" data-max="0.9"></div>
+        <div class="knob-label">PRÓG</div>
+        <div class="knob-val" id="valThreshold">0.25</div>
+      </div>
+      <div class="knob-cell">
+        <div class="knob" id="knobCooldown" data-min="50" data-max="1500"></div>
+        <div class="knob-label">COOLDOWN</div>
+        <div class="knob-val" id="valCooldown">350 ms</div>
+      </div>
+      <div class="knob-cell">
+        <div class="meter-mini"><span id="hitCount">0</span></div>
+        <div class="knob-label">JEBNIĘĆ</div>
+        <div class="knob-val">licznik</div>
+      </div>
+    </section>
+
+    <!-- kalibracja -->
+    <section class="panel">
+      <div class="panel-title">KALIBRACJA JEBNIĘCIA</div>
+      <button id="btnCalibrate" class="cta">⦿ KALIBRUJ — JEBNIJ W LAPTOPA</button>
+      <div id="calStatus" class="cal-status">Złap szczyt swojego uderzenia, a próg ustawi się sam.</div>
+    </section>
+
+    <!-- urządzenie -->
+    <section class="panel">
+      <div class="panel-title">WEJŚCIE AUDIO</div>
+      <select id="deviceSelect" class="select"></select>
+    </section>
+
+    <footer class="foot">
+      <label class="chk">
+        <input type="checkbox" id="startMin" /> start zminimalizowany
+      </label>
+      <span class="hint">uzbrojony = uderzenie wysyła <b id="keyName">ENTER</b></span>
+    </footer>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

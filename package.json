@@ -1,0 +1,46 @@
+{
+  "name": "jebtosendit",
+  "version": "0.1.0",
+  "description": "Jebnij w laptopa — wyślij ENTER. Detektor uderzenia z mikrofonu z futurystycznym UI w stylu wtyczek VST.",
+  "author": "JebToSendIt",
+  "license": "MIT",
+  "main": "src/main/main.js",
+  "scripts": {
+    "icon": "node tools/gen-icon.js",
+    "start": "electron .",
+    "build": "node tools/gen-icon.js && electron-builder --win portable --x64",
+    "dist": "npm run build"
+  },
+  "devDependencies": {
+    "electron": "^31.7.0",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0"
+  },
+  "build": {
+    "appId": "com.jebtosendit.app",
+    "productName": "JebToSendIt",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "src/**/*",
+      "assets/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.png"
+    },
+    "portable": {
+      "artifactName": "JebToSendIt-${version}-portable.exe"
+    }
+  }
+}
