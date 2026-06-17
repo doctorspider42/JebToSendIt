@@ -38,33 +38,46 @@
     <!-- centralny "scope" -->
     <section class="scope-card">
       <canvas id="scope" width="760" height="300"></canvas>
+      <div id="hitChip" class="hit-chip">JEBNIĘĆ: 0</div>
       <div id="hitBadge" class="hit-badge">JEB!</div>
     </section>
 
     <!-- knoby -->
     <section class="knobs">
       <div class="knob-cell">
-        <div class="knob" id="knobThreshold" data-min="0.01" data-max="0.9"></div>
+        <div class="knob" id="knobThreshold"></div>
         <div class="knob-label">PRÓG</div>
         <div class="knob-val" id="valThreshold">0.25</div>
       </div>
       <div class="knob-cell">
-        <div class="knob" id="knobCooldown" data-min="50" data-max="1500"></div>
+        <div class="knob" id="knobMatch"></div>
+        <div class="knob-label">DOPASOWANIE</div>
+        <div class="knob-val" id="valMatch">80%</div>
+      </div>
+      <div class="knob-cell">
+        <div class="knob" id="knobCooldown"></div>
         <div class="knob-label">COOLDOWN</div>
         <div class="knob-val" id="valCooldown">350 ms</div>
       </div>
-      <div class="knob-cell">
-        <div class="meter-mini"><span id="hitCount">0</span></div>
-        <div class="knob-label">JEBNIĘĆ</div>
-        <div class="knob-val">licznik</div>
+    </section>
+
+    <!-- profil akustyczny jebnięcia -->
+    <section class="panel">
+      <div class="panel-title">PROFIL JEBNIĘCIA <span class="panel-sub">(odcisk widmowy)</span></div>
+      <div class="profile-row">
+        <div id="profSpectrum" class="spectrum"></div>
+        <div class="profile-info">
+          <div id="verdict" class="verdict">—</div>
+          <div id="profMeta" class="profmeta">brak profilu — skalibruj jebnięcie</div>
+        </div>
       </div>
     </section>
 
     <!-- kalibracja -->
     <section class="panel">
       <div class="panel-title">KALIBRACJA JEBNIĘCIA</div>
-      <button id="btnCalibrate" class="cta">⦿ KALIBRUJ — JEBNIJ W LAPTOPA</button>
-      <div id="calStatus" class="cal-status">Złap szczyt swojego uderzenia, a próg ustawi się sam.</div>
+      <button id="btnCalibrate" class="cta">⦿ KALIBRUJ — JEBNIJ 2-3 RAZY</button>
+      <div id="calStatus" class="cal-status">Nagram brzmienie i długość Twojego jebnięcia — krzyk nie puści ENTER.</div>
     </section>
 
     <!-- urządzenie -->

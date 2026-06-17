@@ -20,8 +20,17 @@ mikrofon ─► Web Audio (AudioWorklet) ─► peak co ~10 ms ─► próg + co
 ```
 
 - **Detekcja**: `AudioWorklet` liczy szczytową amplitudę na surowych próbkach, więc
-  łapie nawet bardzo krótkie uderzenie. Wyzwolenie następuje, gdy peak przekroczy
-  **próg**, z **cooldownem** chroniącym przed serią.
+  łapie nawet bardzo krótkie uderzenie. Po przekroczeniu **progu** uruchamia się okno
+  oceny (~90 ms), w którym sprawdzany jest nie tylko poziom, ale i **charakter dźwięku**:
+  - **odcisk widmowy** — energia w 8 logarytmicznych pasmach; podobieństwo (cosinus)
+    do skalibrowanego profilu jebnięcia. Krzyk jest tonalny i skupiony w paśmie mowy,
+    więc ma inny kształt widma niż szerokopasmowy puk.
+  - **długość** — jebnięcie gaśnie w kilkadziesiąt ms, wrzask się ciągnie; zdarzenia
+    zbyt długie są odrzucane.
+
+  ENTER leci tylko gdy **kształt widma pasuje** (powyżej suwaka *DOPASOWANIE*) **i**
+  dźwięk jest **krótki**. Do tego **cooldown** chroni przed serią. Jak rozedrzesz ryja —
+  ENTER nie poleci.
 - **Wysyłanie klawisza** ([src/main/keysender.js](src/main/keysender.js)): trwały
   proces PowerShell ładuje raz `System.Windows.Forms` i woła `SendKeys` — niska
   latencja, **zero modułów natywnych**, więc build jest banalny. Warstwa jest
@@ -54,8 +63,11 @@ nic nie instaluje.
 
 - **ARM** — uzbraja/usypia detektor (też z menu w tray).
 - **PRÓG** — czułość; niżej = łatwiej wyzwolić. Pokrętło kręcisz myszą (góra/dół) lub scrollem.
+- **DOPASOWANIE** — rygor zgodności widma z profilem (wyżej = bardziej wybredne, mniej fałszywych wyzwoleń).
 - **COOLDOWN** — minimalna przerwa między wyzwoleniami.
-- **KALIBRUJ** — odliczanie, potem jebnij w laptopa; złapie szczyt i ustawi próg na ~55% jego wartości.
+- **KALIBRUJ** — odliczanie, potem jebnij **2-3 razy** w laptopa; aplikacja uśredni głośność,
+  brzmienie (widmo) i długość Twojego jebnięcia i zapisze profil. Bez profilu działa sam próg amplitudy.
+- **PROFIL JEBNIĘCIA** — podgląd odcisku widmowego + werdykt ostatniego zdarzenia (JEB ✓ / krzyk ✕ z %).
 - **WEJŚCIE AUDIO** — wybór mikrofonu.
 - Zamknięcie okna chowa apkę do **tray** (klik w ikonę = pokaż/schowaj). Wyjście: menu tray → *Zamknij*.
 
