@@ -1,0 +1,48 @@
+name: Release
+
+# Buduje portable .exe na Windowsie i podpina go do Release.
+#  - push taga vX.Y.Z  -> tworzy Release i dołącza exe (do pobrania dla każdego)
+#  - ręczne odpalenie  -> tylko build + artefakt CI (bez Release)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instaluj zależności
+        run: npm ci
+
+      - name: Generuj ikonę
+        run: node tools/gen-icon.js
+
+      - name: Buduj portable EXE
+        run: npx electron-builder --win portable --x64 --publish never
+
+      - name: Artefakt CI (przy ręcznym odpaleniu)
+        uses: actions/upload-artifact@v4
+        with:
+          name: JebToSendIt-portable
+          path: dist/*.exe
+
+      - name: Dołącz EXE do Release (przy tagu)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.exe
+          generate_release_notes: true
+          fail_on_unmatched_files: true

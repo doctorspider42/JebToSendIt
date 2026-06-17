@@ -10,14 +10,22 @@ JebToSendIt siedzi w tle, słucha mikrofonu i kiedy walniesz w obudowę — wysy
 do okna, które masz akurat na wierzchu. Do tego fikuśny, futurystyczny, neonowy interfejs
 i ikonka w trayu. Po co? A bo można. 🤷
 
+<p align="center">
+  <a href="https://github.com/doctorspider42/JebToSendIt/releases/latest">
+    <b>⬇️ Pobierz najnowszą wersję (.exe)</b>
+  </a><br>
+  ściągasz, klikasz, jebiesz — nic nie instaluje
+</p>
+
 ---
 
 ## 🚀 Szybki start
 
 Nie ma instalatora — jest **jeden plik `.exe`**.
 
-1. Zbuduj go (patrz [niżej](#-build--jeden-plik-exe)) albo weź gotowy z folderu `dist/`.
-2. Odpal `JebToSendIt-0.1.0-portable.exe`. Nic nie instaluje, po prostu działa.
+1. Pobierz `JebToSendIt-…-portable.exe` z **[Releases](https://github.com/doctorspider42/JebToSendIt/releases/latest)**
+   (albo zbuduj sam — patrz [niżej](#-build--jeden-plik-exe)).
+2. Odpal go. Nic nie instaluje, po prostu działa.
 3. Za pierwszym razem apka poprosi o dostęp do mikrofonu — zgódź się, inaczej nie ma czego słuchać.
 
 Wolisz z palca, w trybie dev?
