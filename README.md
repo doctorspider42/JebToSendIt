@@ -1,77 +1,103 @@
 # ⚡ JebToSendIt
 
-Jebnij w laptopa — poleci **ENTER**.
+**Jebnij w laptopa — poleci ENTER.** Serio, o to chodzi w całej aplikacji.
 
-Aplikacja nasłuchuje mikrofonu, wykrywa uderzenie (transjent/peak) i wysyła
-naciśnięcie klawisza **ENTER** do aktualnie aktywnego okna. Do tego futurystyczne
-UI w stylu wtyczki VST, kalibracja jebnięcia i ikonka w tray-u.
+<p align="center">
+  <img src="docs/screenshot.png" width="380" alt="Interfejs JebToSendIt" />
+</p>
 
-> Działa na **Windows**. Kod jest tak ułożony, żeby port na macOS/Linux sprowadzał
-> się głównie do dopisania jednej warstwy (wysyłanie klawisza).
+JebToSendIt siedzi w tle, słucha mikrofonu i kiedy walniesz w obudowę — wysyła **ENTER**
+do okna, które masz akurat na wierzchu. Do tego fikuśny, futurystyczny, neonowy interfejs
+i ikonka w trayu. Po co? A bo można. 🤷
 
-## Jak to działa
+---
 
-```
-mikrofon ─► Web Audio (AudioWorklet) ─► peak co ~10 ms ─► próg + cooldown
-                                                                │
-   UI (renderer)  ◄── IPC ──►  proces główny (Electron)  ──────┘
-                                       │
-                                       └─► PowerShell SendKeys ─► {ENTER}
-```
+## 🚀 Szybki start
 
-- **Detekcja**: `AudioWorklet` liczy szczytową amplitudę na surowych próbkach, więc
-  łapie nawet bardzo krótkie uderzenie. Po przekroczeniu **progu** uruchamia się okno
-  oceny (~90 ms), w którym sprawdzany jest nie tylko poziom, ale i **charakter dźwięku**:
-  - **odcisk widmowy** — energia w 8 logarytmicznych pasmach; podobieństwo (cosinus)
-    do skalibrowanego profilu jebnięcia. Inne dźwięki mają inny rozkład energii w widmie
-    niż Twój puk, więc nie pasują do profilu.
-  - **długość** — jebnięcie to krótki transjent; dźwięki, które ciągną się dłużej,
-    są odrzucane.
+Nie ma instalatora — jest **jeden plik `.exe`**.
 
-  ENTER leci tylko gdy **kształt widma pasuje** (powyżej suwaka *DOPASOWANIE*) **i**
-  dźwięk jest **krótki**. Do tego **cooldown** chroni przed serią. Dźwięki inne niż
-  skalibrowane jebnięcie nie wyzwolą ENTER.
-- **Wysyłanie klawisza** ([src/main/keysender.js](src/main/keysender.js)): trwały
-  proces PowerShell ładuje raz `System.Windows.Forms` i woła `SendKeys` — niska
-  latencja, **zero modułów natywnych**, więc build jest banalny. Warstwa jest
-  abstrakcyjna — macOS (`osascript`) i Linux (`xdotool`) to miejsce na przyszły port.
+1. Zbuduj go (patrz [niżej](#-build--jeden-plik-exe)) albo weź gotowy z folderu `dist/`.
+2. Odpal `JebToSendIt-0.1.0-portable.exe`. Nic nie instaluje, po prostu działa.
+3. Za pierwszym razem apka poprosi o dostęp do mikrofonu — zgódź się, inaczej nie ma czego słuchać.
 
-## Wymagania
-
-- [Node.js](https://nodejs.org/) 18+ (testowane na 22)
-- Windows 10/11
-
-## Uruchomienie w trybie dev
+Wolisz z palca, w trybie dev?
 
 ```powershell
 npm install
 npm start
 ```
 
-## Build → portable EXE (bez instalatora)
+---
+
+## 🎯 Jak tego używać
+
+1. **Uzbrój** — kliknij przełącznik **ARM** (albo z menu w trayu). Dioda zapala się na
+   cyjanowo = apka słucha.
+2. **Skalibruj jebnięcie** — kliknij **KALIBRUJ**, poczekaj na odliczanie i **jebnij
+   2-3 razy** w laptopa. Apka zapamięta, jak brzmi i jak długo trwa Twoje uderzenie.
+   Od teraz inne dźwięki (gadanie, muzyka, trzaśnięcie drzwiami) nie będą puszczać ENTER.
+3. **Jeb = ENTER.** Tyle. Walnij w obudowę → leci ENTER do aktywnego okna. Badge „JEB!"
+   mignie na potwierdzenie; jak dźwięk nie pasuje do profilu, zobaczysz „**???**".
+4. Zamknięcie okna **chowa apkę do traya** (nie zamyka). Klik w ikonę = pokaż / schowaj.
+   Żeby wyjść na serio: menu w trayu → *Zamknij*.
+
+### Pokrętła
+
+Kręcisz myszą (góra / dół) albo scrollem:
+
+- **PRÓG** — czułość. Niżej = łatwiej wyzwolić (ale i łatwiej o przypadek).
+- **DOPASOWANIE** — jak bardzo dźwięk ma pasować do profilu jebnięcia. Wyżej = bardziej wybredne.
+- **COOLDOWN** — minimalna przerwa między jebnięciami, żeby jedno walnięcie nie poszło jako pięć.
+
+Panel **PROFIL JEBNIĘCIA** pokazuje „odcisk" Twojego uderzenia i werdykt ostatniego dźwięku
+(`JEB ✓` albo `???` z procentem dopasowania).
+
+> Okno za małe na Twój ekran? Treść się przewija, a samo okno możesz rozciągnąć.
+
+---
+
+## 🔨 Build → jeden plik .exe
 
 ```powershell
 .\build.ps1
 ```
 
-Wynik: pojedynczy plik `dist\JebToSendIt-0.1.0-portable.exe`. Odpalasz i działa,
-nic nie instaluje.
+Wypluje `dist\JebToSendIt-0.1.0-portable.exe` — jeden plik, bez instalatora.
+(To samo robi `npm run build`.)
 
-(alternatywnie: `npm run build`)
+> Skrypt sam ogarnia znany problem electron-buildera na Windowsie (paczka `winCodeSign`
+> z macOS-owymi symlinkami) — nie potrzebujesz trybu deweloperskiego ani praw admina.
 
-## Obsługa
+---
 
-- **ARM** — uzbraja/usypia detektor (też z menu w tray).
-- **PRÓG** — czułość; niżej = łatwiej wyzwolić. Pokrętło kręcisz myszą (góra/dół) lub scrollem.
-- **DOPASOWANIE** — rygor zgodności widma z profilem (wyżej = bardziej wybredne, mniej fałszywych wyzwoleń).
-- **COOLDOWN** — minimalna przerwa między wyzwoleniami.
-- **KALIBRUJ** — odliczanie, potem jebnij **2-3 razy** w laptopa; aplikacja uśredni głośność,
-  brzmienie (widmo) i długość Twojego jebnięcia i zapisze profil. Bez profilu działa sam próg amplitudy.
-- **PROFIL JEBNIĘCIA** — podgląd odcisku widmowego + werdykt ostatniego zdarzenia (JEB ✓ / ??? z %).
-- **WEJŚCIE AUDIO** — wybór mikrofonu.
-- Zamknięcie okna chowa apkę do **tray** (klik w ikonę = pokaż/schowaj). Wyjście: menu tray → *Zamknij*.
+## 🧠 Z czego to jest zrobione (dla ciekawskich)
 
-## Struktura
+Electron + Web Audio do analizy mikrofonu, a ENTER leci przez PowerShell `SendKeys`
+(bez modułów natywnych, dzięki czemu build jest banalnie prosty).
+
+Pod maską detekcja to nie jest zwykłe „głośno = ENTER":
+
+```
+mic ─► AudioWorklet (peak co ~10 ms) ─► próg ─► okno oceny ~90 ms
+                                                       │
+          kształt widma (8 pasm) + długość  ◄──────────┘
+                          │
+              pasuje do profilu?  ──► tak ──► ENTER
+```
+
+- **AudioWorklet** liczy szczyt na surowych próbkach — łapie nawet bardzo krótkie walnięcie.
+- Po przekroczeniu progu rusza ~90 ms okno oceny, w którym sprawdzane jest **brzmienie**
+  (energia w 8 logarytmicznych pasmach, porównywana z profilem) oraz **długość** (jeb to
+  krótki transjent; dźwięki, które się ciągną, lecą w kosz).
+- ENTER leci **tylko** gdy widmo pasuje (powyżej suwaka *DOPASOWANIE*) **i** dźwięk jest krótki.
+- **Wysyłanie klawisza** ([src/main/keysender.js](src/main/keysender.js)): trwały proces
+  PowerShell ładuje raz `System.Windows.Forms` i woła `SendKeys`. Warstwa jest abstrakcyjna —
+  macOS (`osascript`) i Linux (`xdotool`) to gotowe miejsce na przyszły port.
+
+> Apka jest na Windowsa, ale napisana tak, żeby przeniesienie na maca/linuxa sprowadzało
+> się głównie do dopisania jednej warstwy (wysyłanie klawisza).
+
+### Struktura
 
 ```
 src/
@@ -79,15 +105,23 @@ src/
     main.js        proces główny: okno, tray, IPC
     keysender.js   warstwa wysyłania klawisza (Windows: PowerShell SendKeys)
     settings.js    trwałe ustawienia (electron-store)
-  preload.js       most contextBridge (bezpieczne API dla renderera)
+  preload.js       most contextBridge (bezpieczne API dla UI)
   renderer/
-    index.html     UI
-    styles.css      neonowy styl VST
-    renderer.js    detekcja, knoby, scope, kalibracja
+    index.html     interfejs
+    styles.css     neonowy, futurystyczny styl
+    renderer.js    detekcja, pokrętła, scope, kalibracja, dopasowanie
     worklet.js     AudioWorklet — pomiar peaku
 tools/gen-icon.js  generator ikony (PNG bez zależności)
+tools/capture.js   pomocniczy zrzut UI do README
 build.ps1          build portable EXE
 ```
+
+### Wymagania
+
+- [Node.js](https://nodejs.org/) 18+ (testowane na 22)
+- Windows 10 / 11
+
+---
 
 ## Licencja
 
