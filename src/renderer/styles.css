@@ -38,11 +38,29 @@ html, body {
 /* ---------- pasek tytułu ---------- */
 .titlebar {
   -webkit-app-region: drag;
+  flex: 0 0 auto;
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 12px;
   border-bottom: 1px solid var(--line);
   background: linear-gradient(180deg, #12122440, transparent);
 }
+
+/* ---------- przewijalna treść ---------- */
+.content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.content::-webkit-scrollbar { width: 10px; }
+.content::-webkit-scrollbar-track { background: #07071a; }
+.content::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--mag), var(--cyan));
+  border-radius: 6px; border: 2px solid #07071a;
+}
+.content::-webkit-scrollbar-thumb:hover { box-shadow: var(--glow-cyan); }
 .brand { display: flex; align-items: baseline; gap: 8px; letter-spacing: 2px; }
 .bolt { color: var(--cyan); text-shadow: var(--glow-cyan); font-size: 15px; }
 .name { font-weight: 700; font-size: 15px; color: #eef1ff; text-shadow: 0 0 10px #00e8ff40; }

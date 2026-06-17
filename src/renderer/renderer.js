@@ -237,7 +237,7 @@ function judgeEvent(f) {
   if (accept) {
     fireHit(f, sim, null);
   } else {
-    const reason = !durOk ? 'za długie (krzyk?)' : 'inne brzmienie';
+    const reason = !durOk ? 'za długie' : 'inne brzmienie';
     rejectEvent(sim, reason);
   }
 }
@@ -261,7 +261,7 @@ function rejectEvent(sim, reason) {
 function flashBadge(kind) {
   const b = $('hitBadge');
   b.classList.remove('flash', 'nope');
-  b.textContent = kind === 'jeb' ? 'JEB!' : 'krzyk? ✕';
+  b.textContent = kind === 'jeb' ? 'JEB!' : '???';
   if (kind === 'nope') b.classList.add('nope');
   void b.offsetWidth; // restart animacji
   b.classList.add('flash');
