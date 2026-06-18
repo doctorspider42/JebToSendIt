@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy"
@@ -17,9 +17,10 @@
         <span class="ver">v0.1</span>
       </div>
       <div class="winbtns">
-        <button id="btnMin" class="winbtn" title="Minimalizuj">—</button>
-        <button id="btnHide" class="winbtn hide" title="Schowaj do tray">⌄</button>
-        <button id="btnQuit" class="winbtn quit" title="Zamknij">✕</button>
+        <button id="btnLang" class="winbtn lang" data-i18n-title="lang.toggleTitle">EN</button>
+        <button id="btnMin" class="winbtn" data-i18n-title="win.minimize">—</button>
+        <button id="btnHide" class="winbtn hide" data-i18n-title="win.hideToTray">⌄</button>
+        <button id="btnQuit" class="winbtn quit" data-i18n-title="win.close">✕</button>
       </div>
     </header>
 
@@ -28,7 +29,7 @@
     <section class="statusbar">
       <div class="led-wrap">
         <span id="led" class="led"></span>
-        <span id="statusText" class="status-text">UŚPIONY</span>
+        <span id="statusText" class="status-text">ASLEEP</span>
       </div>
       <button id="armSwitch" class="arm-switch" aria-pressed="false">
         <span class="knobball"></span>
@@ -39,7 +40,7 @@
     <!-- centralny "scope" -->
     <section class="scope-card">
       <canvas id="scope" width="760" height="300"></canvas>
-      <div id="hitChip" class="hit-chip">JEBNIĘĆ: 0</div>
+      <div id="hitChip" class="hit-chip">JEBS: 0</div>
       <div id="hitBadge" class="hit-badge">JEB!</div>
     </section>
 
@@ -47,55 +48,58 @@
     <section class="knobs">
       <div class="knob-cell">
         <div class="knob" id="knobThreshold"></div>
-        <div class="knob-label">PRÓG</div>
+        <div class="knob-label" data-i18n="knob.threshold">THRESHOLD</div>
         <div class="knob-val" id="valThreshold">0.25</div>
       </div>
       <div class="knob-cell">
         <div class="knob" id="knobMatch"></div>
-        <div class="knob-label">DOPASOWANIE</div>
+        <div class="knob-label" data-i18n="knob.match">MATCH</div>
         <div class="knob-val" id="valMatch">80%</div>
       </div>
       <div class="knob-cell">
         <div class="knob" id="knobCooldown"></div>
-        <div class="knob-label">COOLDOWN</div>
+        <div class="knob-label" data-i18n="knob.cooldown">COOLDOWN</div>
         <div class="knob-val" id="valCooldown">350 ms</div>
       </div>
     </section>
 
     <!-- profil akustyczny jebnięcia -->
     <section class="panel">
-      <div class="panel-title">PROFIL JEBNIĘCIA <span class="panel-sub">(odcisk widmowy)</span></div>
+      <div class="panel-title"><span data-i18n="profile.title">JEB PROFILE</span> <span class="panel-sub" data-i18n="profile.sub">(spectral fingerprint)</span></div>
       <div class="profile-row">
         <div id="profSpectrum" class="spectrum"></div>
         <div class="profile-info">
           <div id="verdict" class="verdict">—</div>
-          <div id="profMeta" class="profmeta">brak profilu — skalibruj jebnięcie</div>
+          <div id="profMeta" class="profmeta" data-i18n="profile.none">no profile — calibrate your JEB</div>
         </div>
       </div>
     </section>
 
     <!-- kalibracja -->
     <section class="panel">
-      <div class="panel-title">KALIBRACJA JEBNIĘCIA</div>
-      <button id="btnCalibrate" class="cta">⦿ KALIBRUJ — JEBNIJ 2-3 RAZY</button>
-      <div id="calStatus" class="cal-status">Nagram brzmienie i długość Twojego jebnięcia — krzyk nie puści ENTER.</div>
+      <div class="panel-title" data-i18n="calib.title">JEB CALIBRATION</div>
+      <button id="btnCalibrate" class="cta" data-i18n="calib.button">⦿ CALIBRATE — JEB 2-3 TIMES</button>
+      <div id="calStatus" class="cal-status" data-i18n="calib.hint">I'll record the sound and length of your JEB — a shout won't fire ENTER.</div>
     </section>
 
     <!-- urządzenie -->
     <section class="panel">
-      <div class="panel-title">WEJŚCIE AUDIO</div>
+      <div class="panel-title" data-i18n="device.title">AUDIO INPUT</div>
       <select id="deviceSelect" class="select"></select>
     </section>
 
     <footer class="foot">
       <label class="chk">
-        <input type="checkbox" id="startMin" /> start zminimalizowany
+        <input type="checkbox" id="startMin" /> <span data-i18n="footer.startMin">start minimized</span>
       </label>
-      <span class="hint">uzbrojony = uderzenie wysyła <b id="keyName">ENTER</b></span>
+      <span class="hint"><span data-i18n="footer.hintPre">armed = a JEB fires</span> <b id="keyName">ENTER</b></span>
     </footer>
     </main>
   </div>
 
+  <script src="vendor/i18next.min.js"></script>
+  <script src="locales.js"></script>
+  <script src="i18n.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

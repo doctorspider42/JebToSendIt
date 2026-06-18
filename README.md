@@ -1,34 +1,46 @@
 # ⚡ JebToSendIt
 
-**Jebnij w laptopa — poleci ENTER.** Serio, o to chodzi w całej aplikacji.
+> 🌍 **Language / Język:** **English** · [Polski](README.pl.md)
+
+**JEB your laptop — out comes ENTER.** Seriously, that's the whole app.
 
 <p align="center">
-  <img src="docs/screenshot.png" width="380" alt="Interfejs JebToSendIt" />
+  <img src="docs/screenshot.png" width="380" alt="JebToSendIt interface" />
 </p>
 
-JebToSendIt siedzi w tle, słucha mikrofonu i kiedy walniesz w obudowę — wysyła **ENTER**
-do okna, które masz akurat na wierzchu. Do tego fikuśny, futurystyczny, neonowy interfejs
-i ikonka w trayu. Po co? A bo można. 🤷
+> ### 🤛 Wait — what's a *JEB*?
+> *Jeb* (say it "yeb") is Polish for a good, solid **whack** — a thump, a bang, a thwack.
+> To *jeb* something is to give it a firm knock. So in this app you **JEB** your laptop —
+> bang on the case — and it fires **ENTER** into whatever window is on top. We keep saying
+> **JEB** all the way through (yes, even in English), because no English word lands quite
+> the same punch.
+
+JebToSendIt sits in the background, listens to your microphone, and the moment you whack the
+chassis it sends **ENTER** to the foreground window. Plus a flashy, futuristic, neon interface
+and a tray icon. Why? Because you can. 🤷
+
+> The app speaks **English and Polish** — flip it with the **EN/PL** toggle in the top-right
+> corner of the window (it starts in your system language).
 
 <p align="center">
   <a href="https://github.com/doctorspider42/JebToSendIt/releases/latest">
-    <b>⬇️ Pobierz najnowszą wersję (.exe)</b>
+    <b>⬇️ Download the latest version (.exe)</b>
   </a><br>
-  ściągasz, klikasz, jebiesz — nic nie instaluje
+  download, click, JEB — nothing gets installed
 </p>
 
 ---
 
-## 🚀 Szybki start
+## 🚀 Quick start
 
-Nie ma instalatora — jest **jeden plik `.exe`**.
+There's no installer — just **one `.exe` file**.
 
-1. Pobierz `JebToSendIt-…-portable.exe` z **[Releases](https://github.com/doctorspider42/JebToSendIt/releases/latest)**
-   (albo zbuduj sam — patrz [niżej](#-build--jeden-plik-exe)).
-2. Odpal go. Nic nie instaluje, po prostu działa.
-3. Za pierwszym razem apka poprosi o dostęp do mikrofonu — zgódź się, inaczej nie ma czego słuchać.
+1. Grab `JebToSendIt-…-portable.exe` from **[Releases](https://github.com/doctorspider42/JebToSendIt/releases/latest)**
+   (or build it yourself — see [below](#-build--one-exe-file)).
+2. Run it. It installs nothing, it just works.
+3. The first time, the app asks for microphone access — say yes, otherwise there's nothing to listen to.
 
-Wolisz z palca, w trybie dev?
+Prefer the hands-on, dev way?
 
 ```powershell
 npm install
@@ -37,100 +49,103 @@ npm start
 
 ---
 
-## 🎯 Jak tego używać
+## 🎯 How to use it
 
-1. **Uzbrój** — kliknij przełącznik **ARM** (albo z menu w trayu). Dioda zapala się na
-   cyjanowo = apka słucha.
-2. **Skalibruj jebnięcie** — kliknij **KALIBRUJ**, poczekaj na odliczanie i **jebnij
-   2-3 razy** w laptopa. Apka zapamięta, jak brzmi i jak długo trwa Twoje uderzenie.
-   Od teraz inne dźwięki (gadanie, muzyka, trzaśnięcie drzwiami) nie będą puszczać ENTER.
-3. **Jeb = ENTER.** Tyle. Walnij w obudowę → leci ENTER do aktywnego okna. Badge „JEB!"
-   mignie na potwierdzenie; jak dźwięk nie pasuje do profilu, zobaczysz „**???**".
-4. Zamknięcie okna **chowa apkę do traya** (nie zamyka). Klik w ikonę = pokaż / schowaj.
-   Żeby wyjść na serio: menu w trayu → *Zamknij*.
+1. **Arm it** — click the **ARM** switch (or use the tray menu). The LED glows cyan = the app is listening.
+2. **Calibrate your JEB** — click **CALIBRATE**, wait for the countdown, and **JEB your laptop
+   2-3 times**. The app memorizes what your whack *sounds* like and *how long* it lasts.
+   From then on, other noises (talking, music, a slammed door) won't fire ENTER.
+3. **JEB = ENTER.** That's it. Whack the chassis → ENTER goes to the active window. The "JEB!"
+   badge flashes to confirm; if the sound doesn't match your profile, you'll see "**???**".
+4. Closing the window **tucks the app into the tray** (it doesn't quit). Click the icon to
+   show / hide. To actually exit: tray menu → *Quit*.
 
-### Pokrętła
+### Knobs
 
-Kręcisz myszą (góra / dół) albo scrollem:
+Drag with the mouse (up / down) or scroll:
 
-- **PRÓG** — czułość. Niżej = łatwiej wyzwolić (ale i łatwiej o przypadek).
-- **DOPASOWANIE** — jak bardzo dźwięk ma pasować do profilu jebnięcia. Wyżej = bardziej wybredne.
-- **COOLDOWN** — minimalna przerwa między jebnięciami, żeby jedno walnięcie nie poszło jako pięć.
+- **THRESHOLD** — sensitivity. Lower = easier to trigger (but also easier to trip by accident).
+- **MATCH** — how closely a sound must match your JEB profile. Higher = pickier.
+- **COOLDOWN** — the minimum gap between JEBs, so one whack doesn't register as five.
 
-Panel **PROFIL JEBNIĘCIA** pokazuje „odcisk" Twojego uderzenia i werdykt ostatniego dźwięku
-(`JEB ✓` albo `???` z procentem dopasowania).
+The **JEB PROFILE** panel shows the "fingerprint" of your whack and the verdict on the last
+sound (`JEB ✓`, or `???` with a match percentage).
 
-> Okno za małe na Twój ekran? Treść się przewija, a samo okno możesz rozciągnąć.
+> Window too small for your screen? The content scrolls, and you can stretch the window itself.
 
 ---
 
-## 🔨 Build → jeden plik .exe
+## 🔨 Build → one .exe file
 
 ```powershell
 .\build.ps1
 ```
 
-Wypluje `dist\JebToSendIt-0.1.0-portable.exe` — jeden plik, bez instalatora.
-(To samo robi `npm run build`.)
+Spits out `dist\JebToSendIt-0.2.0-portable.exe` — a single file, no installer.
+(`npm run build` does the same thing.)
 
-> Skrypt sam ogarnia znany problem electron-buildera na Windowsie (paczka `winCodeSign`
-> z macOS-owymi symlinkami) — nie potrzebujesz trybu deweloperskiego ani praw admina.
+> The script handles the well-known electron-builder hiccup on Windows (the `winCodeSign`
+> package with its macOS symlinks) on its own — you don't need developer mode or admin rights.
 
 ---
 
-## 🧠 Z czego to jest zrobione (dla ciekawskich)
+## 🧠 What it's made of (for the curious)
 
-Electron + Web Audio do analizy mikrofonu, a ENTER leci przez PowerShell `SendKeys`
-(bez modułów natywnych, dzięki czemu build jest banalnie prosty).
+Electron + Web Audio for the microphone analysis, and ENTER goes out through PowerShell
+`SendKeys` (no native modules, which keeps the build dead simple). Translations are handled
+by [**i18next**](https://www.i18next.com/) — one shared resource set drives both the UI and the tray.
 
-Pod maską detekcja to nie jest zwykłe „głośno = ENTER":
+Under the hood, detection isn't just "loud = ENTER":
 
 ```
-mic ─► AudioWorklet (peak co ~10 ms) ─► próg ─► okno oceny ~90 ms
-                                                       │
-          kształt widma (8 pasm) + długość  ◄──────────┘
+mic ─► AudioWorklet (peak every ~10 ms) ─► threshold ─► ~90 ms eval window
+                                                              │
+          spectrum shape (8 bands) + length  ◄────────────────┘
                           │
-              pasuje do profilu?  ──► tak ──► ENTER
+              matches the profile?  ──► yes ──► ENTER
 ```
 
-- **AudioWorklet** liczy szczyt na surowych próbkach — łapie nawet bardzo krótkie walnięcie.
-- Po przekroczeniu progu rusza ~90 ms okno oceny, w którym sprawdzane jest **brzmienie**
-  (energia w 8 logarytmicznych pasmach, porównywana z profilem) oraz **długość** (jeb to
-  krótki transjent; dźwięki, które się ciągną, lecą w kosz).
-- ENTER leci **tylko** gdy widmo pasuje (powyżej suwaka *DOPASOWANIE*) **i** dźwięk jest krótki.
-- **Wysyłanie klawisza** ([src/main/keysender.js](src/main/keysender.js)): trwały proces
-  PowerShell ładuje raz `System.Windows.Forms` i woła `SendKeys`. Warstwa jest abstrakcyjna —
-  macOS (`osascript`) i Linux (`xdotool`) to gotowe miejsce na przyszły port.
+- **AudioWorklet** computes the peak on raw samples — it catches even a very short whack.
+- Once the threshold is crossed, a ~90 ms evaluation window opens, checking both the **sound**
+  (energy across 8 logarithmic bands, compared to your profile) and the **length** (a JEB is a
+  short transient; sounds that drag on get binned).
+- ENTER fires **only** when the spectrum matches (above the *MATCH* slider) **and** the sound is short.
+- **Keystroke delivery** ([src/main/keysender.js](src/main/keysender.js)): a long-lived PowerShell
+  process loads `System.Windows.Forms` once and calls `SendKeys`. The layer is abstracted —
+  macOS (`osascript`) and Linux (`xdotool`) are ready slots for a future port.
 
-> Apka jest na Windowsa, ale napisana tak, żeby przeniesienie na maca/linuxa sprowadzało
-> się głównie do dopisania jednej warstwy (wysyłanie klawisza).
+> The app is for Windows, but it's written so a port to macOS/Linux mostly comes down to
+> adding one layer (the keystroke sender).
 
-### Struktura
+### Structure
 
 ```
 src/
   main/
-    main.js        proces główny: okno, tray, IPC
-    keysender.js   warstwa wysyłania klawisza (Windows: PowerShell SendKeys)
-    settings.js    trwałe ustawienia (electron-store)
-  preload.js       most contextBridge (bezpieczne API dla UI)
+    main.js        main process: window, tray, IPC, tray i18n
+    keysender.js   keystroke-sender layer (Windows: PowerShell SendKeys)
+    settings.js    persistent settings (electron-store)
+  preload.js       contextBridge bridge (safe API for the UI)
   renderer/
-    index.html     interfejs
-    styles.css     neonowy, futurystyczny styl
-    renderer.js    detekcja, pokrętła, scope, kalibracja, dopasowanie
-    worklet.js     AudioWorklet — pomiar peaku
-tools/gen-icon.js  generator ikony (PNG bez zależności)
-tools/capture.js   pomocniczy zrzut UI do README
-build.ps1          build portable EXE
+    index.html     the interface
+    styles.css     neon, futuristic styling
+    renderer.js    detection, knobs, scope, calibration, matching
+    worklet.js     AudioWorklet — peak measurement
+    i18n.js        i18next bootstrap in the renderer
+    locales.js     translation resources (PL/EN) — shared by UI and tray
+    vendor/        bundled i18next (UMD)
+tools/gen-icon.js  icon generator (dependency-free PNG)
+tools/capture.js   helper that captures the UI for the README
+build.ps1          portable EXE build
 ```
 
-### Wymagania
+### Requirements
 
-- [Node.js](https://nodejs.org/) 18+ (testowane na 22)
+- [Node.js](https://nodejs.org/) 18+ (tested on 22)
 - Windows 10 / 11
 
 ---
 
-## Licencja
+## License
 
 MIT

@@ -1,8 +1,18 @@
 'use strict';
 const { app, BrowserWindow, Tray, Menu, ipcMain, session, nativeImage } = require('electron');
 const path = require('path');
+const i18next = require('i18next');
 const settings = require('./settings');
+const resources = require('../renderer/locales');
 const { createKeySender } = require('./keysender');
+
+// język interfejsu (tray): z ustawień albo z lokalizacji systemu (PL → pl, reszta → en)
+function resolveLanguage() {
+  const saved = settings.getAll().language;
+  if (saved === 'en' || saved === 'pl') return saved;
+  return (app.getLocale() || 'en').toLowerCase().startsWith('pl') ? 'pl' : 'en';
+}
+const tr = (key, opts) => i18next.t(key, opts);
 
 const ICON_PATH = path.join(__dirname, '..', '..', 'assets', 'icon.png');
 
@@ -77,21 +87,21 @@ function updateTrayMenu() {
   if (!tray) return;
   const armed = settings.getAll().armed;
   const menu = Menu.buildFromTemplate([
-    { label: armed ? '● UZBROJONY' : '○ uśpiony', enabled: false },
+    { label: armed ? tr('tray.armedItem') : tr('tray.asleepItem'), enabled: false },
     { type: 'separator' },
     {
-      label: armed ? 'Rozbrój' : 'Uzbrój',
+      label: armed ? tr('tray.disarm') : tr('tray.arm'),
       click: () => setArmed(!armed),
     },
-    { label: 'Pokaż okno', click: () => showWindow() },
+    { label: tr('tray.show'), click: () => showWindow() },
     { type: 'separator' },
     {
-      label: 'Zamknij JebToSendIt',
+      label: tr('tray.quit'),
       click: () => { isQuitting = true; app.quit(); },
     },
   ]);
   tray.setContextMenu(menu);
-  tray.setToolTip(`JebToSendIt — ${armed ? 'UZBROJONY' : 'uśpiony'}`);
+  tray.setToolTip(tr('tray.tooltip', { state: armed ? tr('tray.stateArmed') : tr('tray.stateAsleep') }));
 }
 
 function createTray() {
@@ -108,8 +118,12 @@ function createTray() {
 // ---- IPC ----
 function wireIpc() {
   ipcMain.handle('settings:get', () => settings.getAll());
-  ipcMain.handle('settings:set', (_e, partial) => {
+  ipcMain.handle('settings:set', async (_e, partial) => {
     const next = settings.setMany(partial);
+    if (partial && Object.prototype.hasOwnProperty.call(partial, 'language')) {
+      await i18next.changeLanguage(resolveLanguage());
+      updateTrayMenu();
+    }
     if (partial && Object.prototype.hasOwnProperty.call(partial, 'armed')) {
       updateTrayMenu();
       broadcast('state:armed', next.armed);
@@ -131,7 +145,15 @@ function wireIpc() {
   ipcMain.on('app:quit', () => { isQuitting = true; app.quit(); });
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // i18n procesu głównego (tray) — synchronicznie, bo zasoby są wbudowane
+  await i18next.init({
+    lng: resolveLanguage(),
+    fallbackLng: 'en',
+    resources,
+    interpolation: { escapeValue: false },
+  });
+
   // zgoda na mikrofon w rendererze
   session.defaultSession.setPermissionRequestHandler((_wc, permission, cb) => {
     cb(permission === 'media' || permission === 'microphone');

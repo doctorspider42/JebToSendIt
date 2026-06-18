@@ -2,6 +2,7 @@
 /* JebToSendIt — renderer: detekcja jebnięcia (peak + odcisk widmowy + długość) */
 
 const $ = (id) => document.getElementById(id);
+const t = (key, opts) => window.i18n.t(key, opts);
 
 // ---- parametry analizy ----
 const FFT_SIZE = 1024;          // 512 binów; bin ≈ 46.9 Hz przy 48 kHz
@@ -224,7 +225,7 @@ function judgeEvent(f) {
 
   if (!prof) {
     // brak profilu -> tylko amplituda (jak dawniej)
-    fireHit(f, 1, 'amplituda');
+    fireHit(f, 1, t('reason.amplitude'));
     return;
   }
 
@@ -237,14 +238,14 @@ function judgeEvent(f) {
   if (accept) {
     fireHit(f, sim, null);
   } else {
-    const reason = !durOk ? 'za długie' : 'inne brzmienie';
+    const reason = !durOk ? t('reason.tooLong') : t('reason.otherSound');
     rejectEvent(sim, reason);
   }
 }
 
 function fireHit(f, sim, note) {
   state.hits++;
-  $('hitChip').textContent = 'JEBNIĘĆ: ' + state.hits;
+  $('hitChip').textContent = t('hits', { count: state.hits });
   flashBadge('jeb');
   setVerdict(true, sim, note);
   window.jeb.fireHit({ peak: f.peak, sim });
@@ -261,7 +262,7 @@ function rejectEvent(sim, reason) {
 function flashBadge(kind) {
   const b = $('hitBadge');
   b.classList.remove('flash', 'nope');
-  b.textContent = kind === 'jeb' ? 'JEB!' : '???';
+  b.textContent = kind === 'jeb' ? t('badge.jeb') : t('badge.nope');
   if (kind === 'nope') b.classList.add('nope');
   void b.offsetWidth; // restart animacji
   b.classList.add('flash');
@@ -272,8 +273,8 @@ function setVerdict(ok, sim, note) {
   const pct = Math.round(sim * 100);
   v.classList.toggle('ok', ok);
   v.classList.toggle('bad', !ok);
-  if (ok) v.textContent = (note ? 'JEB ✓' : 'JEB ✓ ' + pct + '%');
-  else v.textContent = 'ODRZUCONE ✕ ' + pct + '%';
+  if (ok) v.textContent = (note ? t('verdict.jeb') : t('verdict.jebPct', { pct }));
+  else v.textContent = t('verdict.rejected', { pct });
   if (note) $('profMeta').textContent = note;
 }
 
@@ -293,7 +294,7 @@ function drawProfile(profile) {
   if (!profile) {
     el.classList.add('empty');
     for (const b of bars) b.style.height = '8%';
-    $('profMeta').textContent = 'brak profilu — skalibruj jebnięcie';
+    $('profMeta').textContent = t('profile.none');
     return;
   }
   el.classList.remove('empty');
@@ -301,8 +302,11 @@ function drawProfile(profile) {
   for (let i = 0; i < bars.length; i++) {
     bars[i].style.height = Math.max(4, (profile.bands[i] / max) * 100) + '%';
   }
-  $('profMeta').textContent =
-    `profil z ${profile.n} jebnięć · ~${Math.round(profile.durationMs)} ms · centroid ${Math.round(profile.centroid)} Hz`;
+  $('profMeta').textContent = t('profile.meta', {
+    n: profile.n,
+    ms: Math.round(profile.durationMs),
+    hz: Math.round(profile.centroid),
+  });
 }
 
 // ---- scope ----
@@ -341,7 +345,7 @@ function drawScope() {
   sctx.setLineDash([]);
   sctx.fillStyle = 'rgba(255,255,255,0.6)';
   sctx.font = '12px Consolas, monospace';
-  sctx.fillText('PRÓG ' + thr.toFixed(2), 8, Math.max(14, thrY - 6));
+  sctx.fillText(t('scope.threshold', { val: thr.toFixed(2) }), 8, Math.max(14, thrY - 6));
 
   requestAnimationFrame(drawScope);
 }
@@ -382,7 +386,7 @@ function reflectArmed(armed) {
   $('armSwitch').setAttribute('aria-pressed', String(armed));
   $('led').classList.toggle('on', armed);
   const st = $('statusText');
-  st.textContent = armed ? 'UZBROJONY' : 'UŚPIONY';
+  st.textContent = armed ? t('status.armed') : t('status.asleep');
   st.classList.toggle('on', armed);
 }
 
@@ -395,8 +399,8 @@ async function calibrate(thresholdKnob) {
   status.classList.remove('ok');
   btn.classList.add('live');
 
-  for (const t of ['3…', '2…', '1…']) { status.textContent = 'Przygotuj się: ' + t; await sleep(700); }
-  status.textContent = '⚡ JEBNIJ 2-3 RAZY! ⚡';
+  for (const c of ['3…', '2…', '1…']) { status.textContent = t('calib.prepare', { t: c }); await sleep(700); }
+  status.textContent = t('calib.go');
 
   state.calEvents = [];
   state.calibrating = true;
@@ -406,7 +410,7 @@ async function calibrate(thresholdKnob) {
 
   const events = state.calEvents.slice();
   if (events.length === 0) {
-    status.textContent = 'Nic nie złapałem. Jebnij mocniej / sprawdź mikrofon.';
+    status.textContent = t('calib.nothing');
     return;
   }
 
@@ -428,8 +432,11 @@ async function calibrate(thresholdKnob) {
   drawProfile(profile);
 
   status.classList.add('ok');
-  status.textContent =
-    `Złapałem ${n} jebnięć → próg ${threshold.toFixed(2)}, długość ~${Math.round(durationMs)} ms. Krzyk już nie puści ENTER.`;
+  status.textContent = t('calib.done', {
+    count: n,
+    threshold: threshold.toFixed(2),
+    ms: Math.round(durationMs),
+  });
 }
 
 let saveTimer = null;
@@ -444,14 +451,36 @@ async function populateDevices(selected) {
   const devices = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'audioinput');
   sel.innerHTML = '';
   const def = document.createElement('option');
-  def.value = ''; def.textContent = 'Domyślne wejście systemowe';
+  def.value = ''; def.textContent = t('device.systemDefault');
   sel.appendChild(def);
   devices.forEach((d, i) => {
     const o = document.createElement('option');
-    o.value = d.deviceId; o.textContent = d.label || `Wejście ${i + 1}`;
+    o.value = d.deviceId; o.textContent = d.label || t('device.input', { n: i + 1 });
     sel.appendChild(o);
   });
   sel.value = selected || '';
+}
+
+// ============================================================
+//  Język (PL ⇄ EN)
+// ============================================================
+// odświeża teksty generowane dynamicznie (statyczne ogarnia i18n.apply)
+function refreshDynamicText() {
+  $('btnLang').textContent = window.i18n.language.toUpperCase();
+  reflectArmed(state.armed);
+  $('hitChip').textContent = t('hits', { count: state.hits });
+  drawProfile(state.settings.profile);
+  populateDevices(state.settings.deviceId);
+}
+
+function setupLanguageToggle() {
+  $('btnLang').textContent = window.i18n.language.toUpperCase();
+  $('btnLang').addEventListener('click', async () => {
+    const next = window.i18n.other();
+    await window.i18n.change(next);
+    saveSettings({ language: next });
+  });
+  window.i18n.onChange(refreshDynamicText);
 }
 
 // ============================================================
@@ -459,6 +488,11 @@ async function populateDevices(selected) {
 // ============================================================
 async function init() {
   state.settings = await window.jeb.getSettings();
+
+  // i18n: język z ustawień (null = autodetekcja z systemu)
+  await window.i18n.init(state.settings.language);
+  setupLanguageToggle();
+
   reflectArmed(state.settings.armed);
   buildSpectrumBars();
   drawProfile(state.settings.profile);
@@ -506,7 +540,7 @@ async function init() {
     await detector.start(state.settings.deviceId);
     await populateDevices(state.settings.deviceId);
   } catch (err) {
-    $('calStatus').textContent = 'Brak dostępu do mikrofonu: ' + err.message;
+    $('calStatus').textContent = t('mic.denied', { err: err.message });
   }
 
   $('deviceSelect').addEventListener('change', async (e) => {

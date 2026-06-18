@@ -11,6 +11,7 @@ const DEFAULTS = {
   keyToSend: 'enter',     // wysyłany klawisz
   armed: true,            // czy detektor jest uzbrojony
   startMinimized: false,  // start od razu do tray
+  language: null,         // 'en' | 'pl' | null (null = autodetekcja z systemu)
 };
 
 function sanitizeProfile(p) {
@@ -43,6 +44,7 @@ function setMany(partial) {
   next.profile = sanitizeProfile(next.profile);
   next.armed = !!next.armed;
   next.startMinimized = !!next.startMinimized;
+  next.language = (next.language === 'en' || next.language === 'pl') ? next.language : null;
   store.set(next);
   return next;
 }
