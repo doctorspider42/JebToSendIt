@@ -1,48 +1,107 @@
 name: Release
 
-# Buduje portable .exe na Windowsie i podpina go do Release.
-#  - push taga vX.Y.Z  -> tworzy Release i dołącza exe (do pobrania dla każdego)
-#  - ręczne odpalenie  -> tylko build + artefakt CI (bez Release)
-
 on:
   push:
-    tags:
-      - 'v*'
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
+  validate:
+    uses: ./.github/workflows/ci.yml
+
   windows:
+    needs: validate
     runs-on: windows-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Instaluj zależności
-        run: npm ci
-
-      - name: Generuj ikonę
-        run: node tools/gen-icon.js
-
-      - name: Buduj portable EXE
-        run: npx electron-builder --win portable --x64 --publish never
-
-      - name: Artefakt CI (przy ręcznym odpaleniu)
-        uses: actions/upload-artifact@v4
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build:win
+      - uses: actions/upload-artifact@v7
         with:
-          name: JebToSendIt-portable
+          name: windows-x64
           path: dist/*.exe
+          if-no-files-found: error
 
-      - name: Dołącz EXE do Release (przy tagu)
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+  macos:
+    needs: validate
+    runs-on: macos-latest
+    timeout-minutes: 120
+    env:
+      # Same Developer ID team as Zitter; hosted runners need the certificate
+      # and Apple service credential supplied through repository secrets.
+      CSC_LINK: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 }}
+      CSC_KEY_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+      CSC_NAME: 'Developer ID Application: Pawel Pajak (7L5KF39DAR)'
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: '7L5KF39DAR'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          files: dist/*.exe
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Check signing credentials
+        shell: bash
+        run: |
+          for name in CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing signing secret for $name; see docs/releases.md"
+              exit 1
+            fi
+          done
+      - run: npm ci
+      - name: Build, sign and notarize both apps
+        run: npm run build:mac -- --config.forceCodeSigning=true --config.mac.notarize=true
+      - name: Verify signed and stapled apps
+        shell: bash
+        run: |
+          for app in dist/mac*/JebToSendIt.app; do
+            codesign --verify --deep --strict "$app"
+            codesign --display --verbose=4 "$app" 2>&1 | tee /tmp/signature.txt
+            grep -q 'TeamIdentifier=7L5KF39DAR' /tmp/signature.txt
+            grep -q 'runtime' /tmp/signature.txt
+            xcrun stapler validate "$app"
+            spctl --assess --type execute --verbose=2 "$app"
+          done
+      - name: Notarize and verify signed DMGs
+        run: npm run notarize:dmg
+      - uses: actions/upload-artifact@v7
+        with:
+          name: macos
+          path: |
+            dist/*.dmg
+            dist/*.dmg.sha256
+          if-no-files-found: error
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: release
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            release/*.exe
+            release/*.dmg
+            release/*.sha256
           generate_release_notes: true
           fail_on_unmatched_files: true

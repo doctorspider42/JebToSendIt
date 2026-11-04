@@ -1,23 +1,32 @@
 {
   "name": "jebtosendit",
-  "version": "0.2.0",
-  "description": "Jebnij w laptopa — wyślij ENTER. Detektor uderzenia z mikrofonu z futurystycznym UI w stylu wtyczek VST.",
+  "version": "0.3.0",
+  "description": "Turn a JEB into Enter, a command or a script. Microphone impact detection for Windows and macOS.",
   "author": "JebToSendIt",
   "license": "MIT",
   "main": "src/main/main.js",
   "scripts": {
     "icon": "node tools/gen-icon.js",
+    "vendor": "node tools/sync-vendor.js",
+    "postinstall": "npm run vendor",
     "start": "electron .",
-    "build": "node tools/gen-icon.js && electron-builder --win portable --x64",
-    "dist": "npm run build"
+    "prepare:build": "npm run vendor && npm run icon",
+    "build": "npm run prepare:build && electron-builder --publish never",
+    "build:win": "npm run build -- --win portable --x64",
+    "build:mac": "npm run build -- --mac dmg --arm64 --x64",
+    "notarize:dmg": "node tools/notarize-dmg.js",
+    "dist": "npm run build",
+    "test": "node --test",
+    "check": "node tools/check.js",
+    "smoke": "electron tools/smoke.js"
   },
   "devDependencies": {
-    "electron": "^31.7.0",
-    "electron-builder": "^24.13.3"
+    "electron": "^45.2.2",
+    "electron-builder": "^26.18.1"
   },
   "dependencies": {
-    "electron-store": "^8.2.0",
-    "i18next": "^23.16.8"
+    "electron-store": "^12.0.0",
+    "i18next": "^26.7.1"
   },
   "build": {
     "appId": "com.jebtosendit.app",
@@ -44,6 +53,46 @@
     },
     "portable": {
       "artifactName": "JebToSendIt-${version}-portable.exe"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "category": "public.app-category.utilities",
+      "icon": "assets/icon.png",
+      "artifactName": "${productName}-${version}-macos-${arch}.${ext}",
+      "hardenedRuntime": true,
+      "entitlements": "assets/signing/entitlements.mac.plist",
+      "entitlementsInherit": "assets/signing/entitlements.mac.plist",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "JebToSendIt listens for impacts to trigger your chosen action.",
+        "NSAppleEventsUsageDescription": "JebToSendIt uses System Events to send Enter to the active application."
+      }
+    },
+    "dmg": {
+      "sign": true,
+      "contents": [
+        {
+          "x": 130,
+          "y": 220,
+          "type": "file"
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
     }
+  },
+  "engines": {
+    "node": ">=26 <27"
   }
 }

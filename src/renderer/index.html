@@ -12,90 +12,81 @@
     <!-- pasek tytułu (przeciąganie okna) -->
     <header class="titlebar">
       <div class="brand">
-        <span class="bolt">⚡</span>
+        <svg class="bolt" width="12" height="15" viewBox="0 0 12 16" aria-hidden="true"><path d="M7 1 1 9h4l-1 6 6-8H6l1-6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
         <span class="name">JEB<span class="accent">TO</span>SENDIT</span>
-        <span class="ver">v0.1</span>
+        <span class="ver" id="appVersion"></span>
       </div>
       <div class="winbtns">
-        <button id="btnLang" class="winbtn lang" data-i18n-title="lang.toggleTitle">EN</button>
-        <button id="btnMin" class="winbtn" data-i18n-title="win.minimize">—</button>
-        <button id="btnHide" class="winbtn hide" data-i18n-title="win.hideToTray">⌄</button>
-        <button id="btnQuit" class="winbtn quit" data-i18n-title="win.close">✕</button>
+        <button id="btnSettings" class="winbtn gear" data-i18n-title="win.settings" data-i18n-aria="win.settings">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        </button>
+        <button id="btnMin" class="winbtn" data-i18n-title="win.minimize" data-i18n-aria="win.minimize">—</button>
+        <button id="btnHide" class="winbtn" data-i18n-title="win.hideToTray" data-i18n-aria="win.hideToTray">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <button id="btnQuit" class="winbtn quit" data-i18n-title="win.close" data-i18n-aria="win.close">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5 5 19"/></svg>
+        </button>
       </div>
     </header>
 
     <main class="content">
-    <!-- listwa statusu + włącznik -->
-    <section class="statusbar">
-      <div class="led-wrap">
-        <span id="led" class="led"></span>
-        <span id="statusText" class="status-text">ASLEEP</span>
-      </div>
-      <button id="armSwitch" class="arm-switch" aria-pressed="false">
-        <span class="knobball"></span>
-        <span class="arm-label">ARM</span>
-      </button>
-    </section>
-
-    <!-- centralny "scope" -->
-    <section class="scope-card">
-      <canvas id="scope" width="760" height="300"></canvas>
-      <div id="hitChip" class="hit-chip">JEBS: 0</div>
-      <div id="hitBadge" class="hit-badge">JEB!</div>
-    </section>
-
-    <!-- knoby -->
-    <section class="knobs">
-      <div class="knob-cell">
-        <div class="knob" id="knobThreshold"></div>
-        <div class="knob-label" data-i18n="knob.threshold">THRESHOLD</div>
-        <div class="knob-val" id="valThreshold">0.25</div>
-      </div>
-      <div class="knob-cell">
-        <div class="knob" id="knobMatch"></div>
-        <div class="knob-label" data-i18n="knob.match">MATCH</div>
-        <div class="knob-val" id="valMatch">80%</div>
-      </div>
-      <div class="knob-cell">
-        <div class="knob" id="knobCooldown"></div>
-        <div class="knob-label" data-i18n="knob.cooldown">COOLDOWN</div>
-        <div class="knob-val" id="valCooldown">350 ms</div>
-      </div>
-    </section>
-
-    <!-- profil akustyczny jebnięcia -->
-    <section class="panel">
-      <div class="panel-title"><span data-i18n="profile.title">JEB PROFILE</span> <span class="panel-sub" data-i18n="profile.sub">(spectral fingerprint)</span></div>
-      <div class="profile-row">
-        <div id="profSpectrum" class="spectrum"></div>
-        <div class="profile-info">
-          <div id="verdict" class="verdict">—</div>
-          <div id="profMeta" class="profmeta" data-i18n="profile.none">no profile — calibrate your JEB</div>
+      <!-- status + włącznik -->
+      <section class="statusbar">
+        <div class="status-col">
+          <div class="led-wrap">
+            <span id="led" class="led"></span>
+            <span id="statusText" class="status-text">ASLEEP</span>
+          </div>
+          <span id="statusSub" class="status-sub"></span>
         </div>
-      </div>
-    </section>
+        <button id="armSwitch" class="arm-switch" aria-pressed="false" data-i18n-aria="status.toggle">
+          <span class="knobball"></span>
+          <span class="arm-label">ARM</span>
+        </button>
+      </section>
 
-    <!-- kalibracja -->
-    <section class="panel">
-      <div class="panel-title" data-i18n="calib.title">JEB CALIBRATION</div>
-      <button id="btnCalibrate" class="cta" data-i18n="calib.button">⦿ CALIBRATE — JEB 2-3 TIMES</button>
-      <div id="calStatus" class="cal-status" data-i18n="calib.hint">I'll record the sound and length of your JEB — a shout won't fire ENTER.</div>
-    </section>
+      <!-- centralny "scope" -->
+      <section class="scope-card">
+        <canvas id="scope" width="760" height="400"></canvas>
+        <div id="hitChip" class="hit-chip">JEBS: 0</div>
+        <div id="hitBadge" class="hit-badge">JEB!</div>
+      </section>
 
-    <!-- urządzenie -->
-    <section class="panel">
-      <div class="panel-title" data-i18n="device.title">AUDIO INPUT</div>
-      <select id="deviceSelect" class="select"></select>
-    </section>
+      <!-- ostatni JEB -->
+      <section class="card last-jeb">
+        <div class="last-col">
+          <span class="card-label" data-i18n="last.title">LAST JEB</span>
+          <span id="lastMeta" class="card-meta" data-i18n="last.none">nothing yet — JEB your laptop</span>
+        </div>
+        <span id="verdict" class="verdict">—</span>
+      </section>
 
-    <footer class="foot">
-      <label class="chk">
-        <input type="checkbox" id="startMin" /> <span data-i18n="footer.startMin">start minimized</span>
-      </label>
-      <span class="hint"><span data-i18n="footer.hintPre">armed = a JEB fires</span> <b id="keyName">ENTER</b></span>
-    </footer>
+      <!-- szybki wybór akcji -->
+      <section class="card action-pick">
+        <div class="pick-head">
+          <span class="card-label" data-i18n="pick.title">JEB DOES</span>
+          <span id="actionHint" class="pick-hint"></span>
+        </div>
+        <div id="actionPicker" class="chips" role="radiogroup" data-i18n-aria="pick.title"></div>
+        <p id="actionError" class="action-error" role="alert"></p>
+        <div id="permBox" class="perm-box" role="alert" hidden>
+          <p id="permText" class="perm-text"></p>
+          <p class="perm-hint" data-i18n="perm.hint">After enabling it, come back here — you may need to restart the app.</p>
+          <div class="perm-actions">
+            <button id="permOpen" type="button" class="btn-outline" data-i18n="perm.open">Open System Settings</button>
+            <button id="permRecheck" type="button" class="btn-plain" data-i18n="perm.recheck">Check again</button>
+          </div>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <span id="recordText" class="record-text"></span>
+        <button id="readout" class="readout" data-i18n-title="pick.tune"></button>
+      </footer>
     </main>
   </div>
+  <div id="recordToast" class="record-toast" role="status" hidden></div>
 
   <script src="vendor/i18next.min.js"></script>
   <script src="locales.js"></script>

@@ -1,6 +1,6 @@
 'use strict';
 /*
- * Generuje assets/icon.png (256x256, RGBA) bez żadnych zależności.
+ * Generuje assets/icon.png (1024x1024, RGBA) bez żadnych zależności.
  * Rysowanie oparte o SDF (capsule/ring), neonowy styl: ciemne tło,
  * cyjanowy pierścień + magentowy symbol ENTER (↵) z poświatą.
  *
@@ -10,7 +10,8 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
-const SIZE = 256;
+const SIZE = 1024;
+const DESIGN_SIZE = 256;
 
 // ---- mała matma ----
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -38,7 +39,7 @@ function arrowDist(x, y) {
 
 // zaokrąglony prostokąt (maska tła)
 function roundRectInside(x, y, r) {
-  const min = r, max = SIZE - r;
+  const min = r, max = DESIGN_SIZE - r;
   let cx = clamp(x, min, max), cy = clamp(y, min, max);
   return Math.hypot(x - cx, y - cy) <= r;
 }
@@ -50,14 +51,15 @@ const buf = Buffer.alloc(SIZE * SIZE * 4);
 const CYAN = [0, 232, 255];
 const MAG = [255, 43, 214];
 
-for (let y = 0; y < SIZE; y++) {
-  for (let x = 0; x < SIZE; x++) {
-    const i = (y * SIZE + x) * 4;
+for (let py = 0; py < SIZE; py++) {
+  for (let px = 0; px < SIZE; px++) {
+    const x = px * DESIGN_SIZE / SIZE, y = py * DESIGN_SIZE / SIZE;
+    const i = (py * SIZE + px) * 4;
     const inside = roundRectInside(x + 0.5, y + 0.5, 46);
     if (!inside) { buf[i + 3] = 0; continue; }
 
     // tło: pionowy gradient + lekki radialny rozjaśnienie
-    const gy = y / SIZE;
+    const gy = y / DESIGN_SIZE;
     let r = mix(10, 22, gy), g = mix(10, 18, gy), b = mix(24, 46, gy);
     const dc = Math.hypot(x - 128, y - 118) / 150;
     const halo = clamp(1 - dc, 0, 1) * 0.18;

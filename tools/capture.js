@@ -6,12 +6,23 @@ const { app, BrowserWindow, ipcMain, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
+app.commandLine.appendSwitch('use-fake-device-for-media-stream');
+app.commandLine.appendSwitch('use-fake-ui-for-media-stream');
+
 const demo = {
   deviceId: null, threshold: 0.22, cooldownMs: 350, matchStrictness: 0.82,
   profile: { bands: [0.16, 0.4, 0.68, 0.88, 0.72, 0.52, 0.34, 0.2], flatness: 0.27, centroid: 3120, durationMs: 38, peak: 0.41, n: 3 },
-  keyToSend: 'enter', armed: true, startMinimized: false,
+  keyToSend: 'enter', recordNotifications: true, armed: true, startMinimized: false, language: 'pl',
+  activeAction: 'key',
+  actions: [
+    { id: 'push', name: 'Push', type: 'command', command: 'git push --force-with-lease', scriptPath: '' },
+    { id: 'deploy', name: 'Deploy', type: 'script', command: '', scriptPath: '/Users/ja/skrypty/deploy.sh' },
+  ],
 };
 
+ipcMain.handle('app:version', () => require('../package.json').version);
+ipcMain.handle('stats:get', () => ({ today: 7, record: 12 }));
+ipcMain.handle('script:choose', () => null);
 ipcMain.handle('settings:get', () => demo);
 ipcMain.handle('settings:set', (_e, p) => Object.assign(demo, p));
 ipcMain.handle('state:setArmed', (_e, v) => { demo.armed = !!v; return demo.armed; });
@@ -19,19 +30,25 @@ ipcMain.on('hit:fire', () => {});
 ipcMain.on('window:minimize', () => {});
 ipcMain.on('window:hide', () => {});
 ipcMain.on('app:quit', () => {});
+ipcMain.on('level', () => {});
+ipcMain.handle('perm:status', () => ({ platform: process.platform, accessibility: true }));
+ipcMain.handle('perm:open', () => {});
+ipcMain.on('settings:open', () => {});
 
 app.whenReady().then(async () => {
   session.defaultSession.setPermissionRequestHandler((_w, _perm, cb) => cb(true));
   const win = new BrowserWindow({
-    width: 440, height: 1010, show: true, frame: false, backgroundColor: '#06060d',
+    width: 440, height: 600, show: true, frame: false, backgroundColor: '#06060d',
     webPreferences: {
       preload: path.join(__dirname, '..', 'src', 'preload.js'),
-      contextIsolation: true, nodeIntegration: false, sandbox: false,
+      contextIsolation: true, nodeIntegration: false, sandbox: true,
       backgroundThrottling: false,
     },
   });
   await win.loadFile(path.join(__dirname, '..', 'src', 'renderer', 'index.html'));
   await new Promise((r) => setTimeout(r, 2200));
+
+  await win.webContents.executeJavaScript('detector.stop()');
 
   // 1) zatrzymaj pętle rAF renderera (żeby nie nadpisywały naszej klatki)
   await win.webContents.executeJavaScript('window.requestAnimationFrame = () => 0; "stopped";');
@@ -40,12 +57,10 @@ app.whenReady().then(async () => {
   // 2) jedna stabilna klatka: licznik + werdykt + ozdobny przebieg na scope
   const ok = await win.webContents.executeJavaScript(`
     (() => {
-      document.getElementById('hitChip').textContent = 'JEBNIĘĆ: 7';
+      document.getElementById('hitChip').textContent = 'DZISIAJ: 7';
       const v = document.getElementById('verdict');
       v.className = 'verdict ok'; v.textContent = 'JEB ✓ 94%';
-      const cs = document.getElementById('calStatus');
-      cs.textContent = 'Złapałem 3 jebnięcia → próg 0.22, długość ~38 ms.';
-      cs.classList.add('ok');
+      document.getElementById('lastMeta').textContent = '38 ms · 3.1 kHz · 2 s temu';
       const c = document.getElementById('scope'), x = c.getContext('2d');
       const W = c.width, H = c.height, n = 190, bw = W / n, thr = 0.22, thrY = H - Math.pow(thr,0.55)*H;
       x.clearRect(0,0,W,H);
