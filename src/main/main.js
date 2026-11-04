@@ -7,6 +7,7 @@ const resources = require('../renderer/locales');
 const { createKeySender } = require('./keysender');
 const { ActionRunner, resolveAction } = require('./actions');
 const { currentStats, recordHit } = require('./stats');
+const { createUpdates, supportsUpdates } = require('./updates');
 
 // język interfejsu (tray): z ustawień albo z lokalizacji systemu (PL → pl, reszta → en)
 function resolveLanguage() {
@@ -24,6 +25,7 @@ let tray = null;
 let keySender = null;
 let isQuitting = false;
 let actionRunner;
+let updates;
 let lastHit = -Infinity;
 
 // pojedyncza instancja
@@ -135,6 +137,7 @@ function updateTrayMenu() {
     },
     { label: tr('tray.show'), click: () => showWindow() },
     { label: tr('tray.settings'), click: () => openSettings() },
+    { label: tr(updates?.getState().status === 'ready' ? 'updates.restart' : 'updates.title'), click: () => openSettings('app') },
     { type: 'separator' },
     {
       label: tr('tray.quit'),
@@ -175,6 +178,9 @@ function wireIpc() {
   ipcMain.handle('state:setArmed', (_e, value) => setArmed(value));
 
   ipcMain.handle('app:version', () => app.getVersion());
+  ipcMain.handle('updates:get', () => updates.getState());
+  ipcMain.handle('updates:check', () => updates.check());
+  ipcMain.handle('updates:install', () => updates.install());
   ipcMain.handle('stats:get', () => currentStats(settings.getStats()));
   ipcMain.handle('script:choose', async (e) => {
     const result = await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender) || mainWindow, {
@@ -248,9 +254,25 @@ app.whenReady().then(async () => {
   }
   keySender = createKeySender();
   actionRunner = new ActionRunner(keySender);
+  const supported = supportsUpdates({
+    isPackaged: app.isPackaged, platform: process.platform,
+    portable: !!process.env.PORTABLE_EXECUTABLE_FILE,
+  });
+  updates = createUpdates({
+    supported,
+    updater: supported ? require('electron-updater').autoUpdater : null,
+    onChange: (state) => { broadcast('updates:changed', state); updateTrayMenu(); },
+    onReady: ({ version }) => {
+      if (!Notification.isSupported()) return;
+      const notification = new Notification({ title: tr('updates.title'), body: tr('updates.ready', { version }) });
+      notification.on('click', () => openSettings('app'));
+      notification.show();
+    },
+  });
   wireIpc();
   createWindow();
   createTray();
+  updates.start();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -264,4 +286,4 @@ app.on('window-all-closed', (e) => {
 });
 
 app.on('before-quit', () => { isQuitting = true; });
-app.on('will-quit', () => { actionRunner?.dispose(); });
+app.on('will-quit', () => { updates?.dispose(); actionRunner?.dispose(); });

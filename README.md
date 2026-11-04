@@ -14,7 +14,7 @@ and duration to distinguish it from speech. The app lives in the system tray.
 
 Download from [Releases](https://github.com/doctorspider42/JebToSendIt/releases/latest):
 
-- **Windows 10/11:** run the portable x64 `.exe`.
+- **Windows 10/11:** install the x64 `setup.exe` for automatic updates, or use the portable `.exe` with manual updates.
 - **macOS:** choose the `arm64` DMG for Apple Silicon or `x64` for Intel; drag the
   application into Applications. Release DMGs are signed and notarized when the
   signing secrets described in [release setup](docs/releases.md) are configured.
@@ -50,6 +50,12 @@ error. Actions have a 30-second execution limit, and failures appear in the UI.
 
 Use Hide to tuck the app into the tray; Quit exits it. The language (System,
 Polski, English) is in **Settings → App**.
+Installed releases check GitHub for stable updates 30 seconds after startup and every
+6 hours. Updates download in the background and install when you quit. Use
+**Settings → App → Updates** to check now or restart and install; Hide keeps the
+app running. Portable and development builds require manual updates. Older
+releases without this feature need a one-time manual installation.
+
 Settings and counters are stored locally in Electron's user data directory.
 
 ## Development and builds
@@ -67,8 +73,8 @@ npm run smoke
 ```
 
 ```sh
-npm run build:win  # Windows portable x64 (run on Windows)
-npm run build:mac  # Apple Silicon + Intel DMG (run on macOS)
+npm run build:win  # Windows x64 installer + portable (run on Windows)
+npm run build:mac  # Apple Silicon + Intel DMG + update ZIP (run on macOS)
 ```
 
 `build.ps1` / `build.sh` are convenience wrappers. See [release setup and

@@ -9,6 +9,10 @@ function listen(channel, cb) {
 
 contextBridge.exposeInMainWorld('jeb', {
   getVersion: () => ipcRenderer.invoke('app:version'),
+  getUpdateState: () => ipcRenderer.invoke('updates:get'),
+  checkForUpdates: () => ipcRenderer.invoke('updates:check'),
+  installUpdate: () => ipcRenderer.invoke('updates:install'),
+  onUpdateChanged: (cb) => listen('updates:changed', cb),
   getStats: () => ipcRenderer.invoke('stats:get'),
   chooseScript: () => ipcRenderer.invoke('script:choose'),
   onActionError: (cb) => {

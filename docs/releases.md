@@ -1,5 +1,8 @@
 # Release builds
 
+Version 0.4.0 adds automatic stable-release updates from GitHub, a Windows NSIS
+installer, and macOS update ZIPs and manifests alongside the existing downloads.
+
 Use Node.js 26 (`nvm use`) and `npm ci`. Version 0.3.0 updates Electron to
 45.2.2, electron-builder to 26.18.1, electron-store to 12.0.0 and i18next to
 26.7.1. The lockfile pins the resolved dependency tree. `postinstall` copies the
@@ -12,7 +15,8 @@ sandboxed renderer with an isolated settings profile, and audits runtime
 packages on Windows, Linux and macOS. Linux is a test host; Enter delivery and
 release downloads support Windows and macOS.
 
-The release workflow builds Windows portable x64 EXE and macOS arm64 + x64 DMGs.
+The release workflow builds Windows x64 NSIS installer + portable EXE and macOS arm64 + x64
+DMGs + update ZIPs. GitHub is configured as the electron-updater provider.
 Manual dispatch retains CI artifacts. A `vX.Y.Z` tag must match package.json;
 publication waits for both operating systems and attaches their files to one
 GitHub release. Neither a local build nor editing this workflow publishes a release.
@@ -74,9 +78,24 @@ npm run build:mac -- --config.forceCodeSigning=true --config.mac.notarize=true
 npm run notarize:dmg
 ```
 
-Only publish the final DMGs after these commands succeed. Intermediate app/ZIP
-outputs are not downloads. Apple submission may take time; inspect the reported
-submission status before repeating an interrupted upload.
+Publish final DMGs, update ZIPs, ZIP/EXE blockmaps, `latest.yml` and
+`latest-mac.yml` together after these commands succeed. The ZIPs contain the
+signed, notarized apps and are required by macOS automatic updates. DMGs have
+`writeUpdateInfo: false`: their separate stapling changes their bytes after the
+build; the update manifest references the unmodified ZIPs only. Keep both Mac
+architectures in the generated `latest-mac.yml`; do not overwrite it with a
+manifest from a single-architecture build. The workflow uploads these generated
+files after both OS builds complete. No GitHub token is embedded in the app.
+
+Installed releases check stable GitHub Releases after 30 seconds and every six
+hours, automatically download verified updates, and install on quit or through
+Settings → App → Restart and install. Prereleases and downgrades are disabled.
+Development, Linux and Windows portable builds do not start the updater. Older
+versions without the updater require a manual installation of this release;
+Windows users must choose the NSIS installer to receive subsequent updates.
+
+Apple submission may take time; inspect the reported submission status before
+repeating an interrupted upload.
 
 For a development package without contacting Apple:
 
@@ -97,7 +116,8 @@ npm audit --omit=dev
 
 The smoke test exercises real electron-store persistence, sandboxed preload,
 command/script controls, rapid settings edits, language switching and disabled
-record notifications. It never executes the user's configured action. It writes
+record notifications, plus update status/progress and restart IPC with a fake
+updater. It never executes the user's configured action. It writes
 `dist/smoke.png` for visual review. On headless Linux use `xvfb-run -a npm run smoke`. GitHub-hosted Ubuntu
 runs this with `--no-sandbox` because its user-namespace policy can block the
 Chromium OS sandbox; preload isolation is still exercised. Local smoke tests

@@ -1,6 +1,6 @@
 {
   "name": "jebtosendit",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Turn a JEB into Enter, a command or a script. Microphone impact detection for Windows and macOS.",
   "author": "JebToSendIt",
   "license": "MIT",
@@ -12,8 +12,8 @@
     "start": "electron .",
     "prepare:build": "npm run vendor && npm run icon",
     "build": "npm run prepare:build && electron-builder --publish never",
-    "build:win": "npm run build -- --win portable --x64",
-    "build:mac": "npm run build -- --mac dmg --arm64 --x64",
+    "build:win": "npm run build -- --win nsis portable --x64",
+    "build:mac": "npm run build -- --mac dmg zip --arm64 --x64",
     "notarize:dmg": "node tools/notarize-dmg.js",
     "dist": "npm run build",
     "test": "node --test",
@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "electron-store": "^12.0.0",
+    "electron-updater": "^6.8.11",
     "i18next": "^26.7.1"
   },
   "build": {
@@ -43,6 +44,12 @@
     "win": {
       "target": [
         {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
           "target": "portable",
           "arch": [
             "x64"
@@ -58,6 +65,13 @@
       "target": [
         {
           "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
           "arch": [
             "arm64",
             "x64"
@@ -89,7 +103,21 @@
           "type": "link",
           "path": "/Applications"
         }
-      ]
+      ],
+      "writeUpdateInfo": false
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "doctorspider42",
+        "repo": "JebToSendIt",
+        "releaseType": "release"
+      }
+    ],
+    "nsis": {
+      "artifactName": "JebToSendIt-${version}-setup.${ext}",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     }
   },
   "engines": {

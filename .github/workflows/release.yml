@@ -31,7 +31,10 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: windows-x64
-          path: dist/*.exe
+          path: |
+            dist/*.exe
+            dist/*.exe.blockmap
+            dist/latest.yml
           if-no-files-found: error
 
   macos:
@@ -93,6 +96,9 @@ jobs:
           path: |
             dist/*.dmg
             dist/*.dmg.sha256
+            dist/*.zip
+            dist/*.zip.blockmap
+            dist/latest-mac.yml
           if-no-files-found: error
       - name: Remove API key
         if: always()
@@ -116,5 +122,8 @@ jobs:
             release/*.exe
             release/*.dmg
             release/*.sha256
+            release/*.zip
+            release/*.blockmap
+            release/*.yml
           generate_release_notes: true
           fail_on_unmatched_files: true

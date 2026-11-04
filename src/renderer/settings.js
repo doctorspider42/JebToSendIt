@@ -12,6 +12,7 @@ const state = {
   selected: 'key',        // zaznaczona akcja w edytorze ('key' albo id)
   stats: { today: 0, record: 0 },
   calib: null,            // ostatni raport kalibracji z okna głównego
+  update: { status: 'idle' },
 };
 
 // ============================================================
@@ -297,6 +298,14 @@ function renderApp() {
   const lang = state.settings.language || '';
   document.querySelectorAll('[data-lang]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.lang === lang)));
   $('startMin').checked = !!state.settings.startMinimized;
+  renderUpdates();
+}
+
+function renderUpdates() {
+  const update = state.update;
+  $('updateStatus').textContent = t(`updates.${update.status}`, update);
+  $('checkUpdates').disabled = !['idle', 'current', 'error'].includes(update.status);
+  $('installUpdate').hidden = update.status !== 'ready';
 }
 
 function renderAll() {
@@ -321,6 +330,13 @@ async function init() {
   state.selected = state.settings.activeAction;
   state.stats = await window.jeb.getStats();
   $('appVersion').textContent = `JebToSendIt v${await window.jeb.getVersion()}`;
+  window.jeb.onUpdateChanged((update) => { state.update = update; renderUpdates(); });
+  state.update = await window.jeb.getUpdateState();
+  $('checkUpdates').addEventListener('click', () => { void window.jeb.checkForUpdates(); });
+  $('installUpdate').addEventListener('click', async () => {
+    await flushSettings();
+    await window.jeb.installUpdate();
+  });
 
   setupKnobs();
   buildSpectrumBars();

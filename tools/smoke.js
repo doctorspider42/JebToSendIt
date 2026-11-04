@@ -8,6 +8,8 @@ const assert = require('node:assert/strict');
 const settings = require('../src/main/settings');
 const { currentStats } = require('../src/main/stats');
 const { resolveAction } = require('../src/main/actions');
+const { createUpdates } = require('../src/main/updates');
+const { EventEmitter } = require('node:events');
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'jeb-smoke-'));
 app.setPath('userData', profile);
 app.commandLine.appendSwitch('use-fake-device-for-media-stream');
@@ -37,6 +39,15 @@ app.whenReady().then(async () => {
   ipcMain.handle('settings:set', (e, partial) => { const next = settings.setMany(partial); sendAllExcept(e.sender, 'settings:changed', next); return next; });
   ipcMain.handle('stats:get', () => currentStats(settings.getStats()));
   ipcMain.handle('app:version', () => require('../package.json').version);
+  const updater = new EventEmitter();
+  let updateInstalls = 0;
+  updater.checkForUpdates = async () => { updater.emit('update-not-available'); };
+  updater.quitAndInstall = () => { updateInstalls++; };
+  const updates = createUpdates({ supported: true, updater,
+    onChange: (state) => sendAllExcept(null, 'updates:changed', state) });
+  ipcMain.handle('updates:get', () => updates.getState());
+  ipcMain.handle('updates:check', () => updates.check());
+  ipcMain.handle('updates:install', () => updates.install());
   ipcMain.handle('script:choose', () => '/tmp/test script.js');
   ipcMain.handle('state:setArmed', (_e, value) => value);
   ipcMain.handle('action:test', () => null);
@@ -131,6 +142,22 @@ app.whenReady().then(async () => {
     'false|macOS blokuje wysyłanie klawiszy');
   trusted = true;
   assert.equal(await js(main, `el('permRecheck').click(); await new Promise(r => setTimeout(r, 100)); return el('permBox').hidden`), true);
+
+  // Update IPC, download progress, translation and explicit restart (no network/install).
+  await js(set, `document.querySelector('[data-tab=app]').click(); el('checkUpdates').click();`);
+  await wait(100);
+  assert.equal(await js(set, `return el('updateStatus').textContent`), 'Masz najnowszą wersję.');
+  updater.emit('update-available', { version: '0.4.0' });
+  updater.emit('download-progress', { percent: 42 });
+  await wait(50);
+  assert.equal(await js(set, `return el('checkUpdates').disabled`), true);
+  assert.equal(await js(set, `return el('updateStatus').textContent`), 'Pobieranie v0.4.0: 42%');
+  updater.emit('update-downloaded', { version: '0.4.0' });
+  await wait(50);
+  assert.equal(await js(set, `return el('installUpdate').hidden`), false);
+  await js(set, `el('installUpdate').click();`);
+  await wait(100);
+  assert.equal(updateInstalls, 1);
 
   console.log('Smoke passed. Renderer errors:', errors);
   assert.equal(errors.length, 0);

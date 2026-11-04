@@ -59,6 +59,15 @@
           app: 'App', appSub: 'language, startup',
         },
         detect: { sub: 'When a sound counts as a JEB. Drag a knob up / down, scroll or use the arrow keys.' },
+        updates: {
+          title: 'Updates', check: 'Check for updates', restart: 'Restart and install',
+          help: 'Stable releases from GitHub download automatically and install when you quit. Checks run after startup and every 6 hours.',
+          idle: 'Updates have not been checked yet.', checking: 'Checking GitHub…',
+          current: 'You are up to date.', downloading: 'Downloading v{{version}}: {{percent}}%',
+          ready: 'Version {{version}} is ready. Restart to install.', installing: 'Restarting to install…',
+          error: 'Could not update. Check your connection and try again.',
+          unsupported: 'Automatic updates require an installed Windows release or a signed macOS release. Development and portable builds need a manual download from GitHub Releases.',
+        },
         app: { sub: 'Language and startup behaviour.', language: 'LANGUAGE', langSystem: 'System' },
         win: { minimize: 'Minimize', hideToTray: 'Hide to tray', close: 'Close', settings: 'Settings' },
         status: {
@@ -157,6 +166,15 @@
           app: 'Aplikacja', appSub: 'język, start',
         },
         detect: { sub: 'Kiedy dźwięk liczy się jako JEB. Przeciągnij gałkę w górę / w dół, kręć kółkiem albo strzałkami.' },
+        updates: {
+          title: 'Aktualizacje', check: 'Sprawdź aktualizacje', restart: 'Uruchom ponownie i zainstaluj',
+          help: 'Stabilne wydania z GitHuba pobierają się automatycznie i instalują przy zamknięciu aplikacji. Sprawdzanie po starcie i co 6 godzin.',
+          idle: 'Jeszcze nie sprawdzono aktualizacji.', checking: 'Sprawdzanie GitHuba…',
+          current: 'Masz najnowszą wersję.', downloading: 'Pobieranie v{{version}}: {{percent}}%',
+          ready: 'Wersja {{version}} jest gotowa. Uruchom ponownie, aby ją zainstalować.', installing: 'Ponowne uruchamianie i instalacja…',
+          error: 'Nie udało się zaktualizować. Sprawdź połączenie i spróbuj ponownie.',
+          unsupported: 'Autoupdate wymaga zainstalowanego wydania Windows lub podpisanego wydania macOS. Wersje deweloperskie i portable wymagają ręcznego pobrania z GitHub Releases.',
+        },
         app: { sub: 'Język i zachowanie przy starcie.', language: 'JĘZYK', langSystem: 'Systemowy' },
         win: { minimize: 'Minimalizuj', hideToTray: 'Schowaj do zasobnika', close: 'Zamknij', settings: 'Ustawienia' },
         status: {

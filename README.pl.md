@@ -13,7 +13,7 @@ oraz długości jebnięcia i odróżnia je od mowy. Program działa w tle, w tra
 
 Pobierz pliki z [Releases](https://github.com/doctorspider42/JebToSendIt/releases/latest):
 
-- **Windows 10/11:** uruchom przenośny plik `.exe` x64.
+- **Windows 10/11:** zainstaluj `setup.exe` x64, aby korzystać z autoupdate, albo użyj wersji portable `.exe` z ręcznymi aktualizacjami.
 - **macOS:** wybierz DMG `arm64` dla Apple Silicon albo `x64` dla Intela i przeciągnij
   aplikację do Applications. Podpisanie i notaryzacja wydań wymagają konfiguracji
   opisanej w [instrukcji pipeline](docs/releases.md).
@@ -48,7 +48,16 @@ się jedna akcja naraz, z limitem 30 sekund. Kolejne jebnięcie podczas wykonywa
 akcji nadal się liczy, ale zgłasza zajętość. Błędy są widoczne w interfejsie.
 
 Schowanie okna pozostawia program w trayu; Zamknij kończy działanie. Język
-(Systemowy, Polski, English) zmienisz w **Ustawienia → Aplikacja**. Ustawienia i statystyki są lokalne, w katalogu danych użytkownika Electrona.
+(Systemowy, Polski, English) zmienisz w **Ustawienia → Aplikacja**.
+
+Zainstalowane wydania sprawdzają stabilne wersje na GitHubie 30 sekund po starcie
+i co 6 godzin. Aktualizacja pobiera się w tle i instaluje przy zamknięciu aplikacji.
+W **Ustawienia → Aplikacja → Aktualizacje** możesz sprawdzić nową wersję lub
+uruchomić ponownie i zainstalować pobraną. Ukrycie do traya nie zamyka aplikacji.
+Wersje portable i deweloperskie aktualizuje się ręcznie. Starsze wydania bez
+tej funkcji wymagają jednorazowej ręcznej instalacji nowej wersji.
+
+Ustawienia i statystyki są lokalne, w katalogu danych użytkownika Electrona.
 
 ## Rozwój i budowanie
 
@@ -65,8 +74,8 @@ npm run smoke
 ```
 
 ```sh
-npm run build:win  # portable EXE x64, na Windowsie
-npm run build:mac  # DMG Apple Silicon + Intel, na macOS
+npm run build:win  # instalator + portable EXE x64, na Windowsie
+npm run build:mac  # DMG + ZIP aktualizacji Apple Silicon i Intel, na macOS
 ```
 
 Dostępne są też `build.ps1` i `build.sh`. [Instrukcja wydań](docs/releases.md)

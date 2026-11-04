@@ -1,4 +1,4 @@
-# JebToSendIt — portable Windows build. Requires Node.js 26.
+# JebToSendIt — Windows installer + portable build. Requires Node.js 26.
 $ErrorActionPreference = "Stop"
 Set-Location -Path $PSScriptRoot
 npm ci
