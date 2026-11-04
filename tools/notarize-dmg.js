@@ -14,9 +14,13 @@ function run(cmd, args, capture = false) {
   }
   return result.stdout;
 }
-const credentials = process.env.APPLE_KEYCHAIN_PROFILE
-  ? ['--keychain-profile', process.env.APPLE_KEYCHAIN_PROFILE, ...(process.env.APPLE_KEYCHAIN ? ['--keychain', process.env.APPLE_KEYCHAIN] : [])]
-  : ['--apple-id', process.env.APPLE_ID, '--password', process.env.APPLE_APP_SPECIFIC_PASSWORD, '--team-id', process.env.APPLE_TEAM_ID];
+// Kolejność: profil z lokalnego Pęku kluczy → klucz App Store Connect API (CI) → Apple ID + hasło do aplikacji.
+const env = process.env;
+const credentials = env.APPLE_KEYCHAIN_PROFILE
+  ? ['--keychain-profile', env.APPLE_KEYCHAIN_PROFILE, ...(env.APPLE_KEYCHAIN ? ['--keychain', env.APPLE_KEYCHAIN] : [])]
+  : env.APPLE_API_KEY
+    ? ['--key', env.APPLE_API_KEY, '--key-id', env.APPLE_API_KEY_ID, '--issuer', env.APPLE_API_ISSUER]
+    : ['--apple-id', env.APPLE_ID, '--password', env.APPLE_APP_SPECIFIC_PASSWORD, '--team-id', env.APPLE_TEAM_ID];
 if (credentials.some(v => !v)) throw new Error('Missing Apple notarization credentials.');
 const files = fs.readdirSync('dist').filter(f => f.endsWith('.dmg'));
 if (!files.length) throw new Error('No DMG to notarize.');

@@ -30,15 +30,29 @@ microphone and Apple Events entitlements; Chromium/Zitter's entitlement split
 is not copied blindly. This is outside the Mac App Store.
 
 GitHub-hosted macOS runners cannot use the private key or `zitter-notary`
-profile stored in a local Mac Keychain. Configure these repository (or shared
-organization) Actions secrets before running the macOS release job:
+profile stored in a local Mac Keychain. The release workflow uses the same
+secret names as Pitch Doctor and tyraX: the Developer ID certificate for signing
+and an App Store Connect API key (not an Apple ID password) for notarization.
+Configure these repository Actions secrets before running the macOS release job:
 
 | Secret | Value |
 | --- | --- |
-| `MACOS_CERTIFICATE_P12_BASE64` | Base64 PKCS#12 export of the existing Developer ID certificate **and private key** |
-| `MACOS_CERTIFICATE_PASSWORD` | Password protecting that PKCS#12 export |
-| `APPLE_ID` | Apple Account email used for Zitter notarization |
-| `APPLE_APP_SPECIFIC_PASSWORD` | Apple app-specific password for notarization |
+| `MACOS_CERT_P12_BASE64` | `base64 -i <file>.p12` — PKCS#12 export of the Developer ID certificate **and private key** |
+| `MACOS_CERT_PASSWORD` | Password protecting that PKCS#12 export |
+| `APPLE_API_KEY_P8_BASE64` | `base64 -i AuthKey_<id>.p8` — App Store Connect API key (Users and Access → Integrations → App Store Connect API, role Developer) |
+| `APPLE_API_KEY_ID` | ID of that key |
+| `APPLE_API_ISSUER` | Issuer ID shown above the key list |
+
+Secret values cannot be copied between repositories; set them here with
+`gh secret set <NAME>` (it prompts for the value), piping base64 for the files:
+
+```sh
+base64 -i ~/Documents/<certificate>.p12 | gh secret set MACOS_CERT_P12_BASE64
+gh secret set MACOS_CERT_PASSWORD
+base64 -i ~/path/AuthKey_<id>.p8 | gh secret set APPLE_API_KEY_P8_BASE64
+gh secret set APPLE_API_KEY_ID
+gh secret set APPLE_API_ISSUER
+```
 
 The certificate belongs to team `7L5KF39DAR`, already set in the workflow.
 Keep these values private; enter them through GitHub's secret settings. A new
