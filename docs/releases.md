@@ -67,7 +67,7 @@ For a local Mac with the same Developer ID and existing Zitter credentials:
 
 ```sh
 npm ci
-export CSC_NAME='Developer ID Application: Pawel Pajak (7L5KF39DAR)'
+export CSC_NAME='Pawel Pajak (7L5KF39DAR)'  # bez prefiksu "Developer ID Application:"
 export APPLE_KEYCHAIN="$HOME/Library/Keychains/login.keychain-db"
 export APPLE_KEYCHAIN_PROFILE=zitter-notary
 npm run build:mac -- --config.forceCodeSigning=true --config.mac.notarize=true
