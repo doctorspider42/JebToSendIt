@@ -20,11 +20,13 @@
     if (key) el.textContent = i18next.t(key);
     const titleKey = el.getAttribute('data-i18n-title');
     if (titleKey) el.title = i18next.t(titleKey);
+    const ariaKey = el.getAttribute('data-i18n-aria');
+    if (ariaKey) el.setAttribute('aria-label', i18next.t(ariaKey));
   }
 
   // przechodzi po całym DOM i podstawia teksty
   function applyTranslations(root) {
-    (root || document).querySelectorAll('[data-i18n], [data-i18n-title]').forEach(applyTo);
+    (root || document).querySelectorAll('[data-i18n], [data-i18n-title], [data-i18n-aria]').forEach(applyTo);
     document.documentElement.lang = i18next.language;
   }
 
@@ -51,7 +53,10 @@
     other() {
       return i18next.language === 'pl' ? 'en' : 'pl';
     },
+    resolve: resolveLanguage,
     async change(lng) {
+      lng = resolveLanguage(lng);
+      if (lng === i18next.language) return lng;
       await i18next.changeLanguage(lng);
       applyTranslations();
       listeners.forEach((fn) => fn(lng));

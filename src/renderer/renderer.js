@@ -19,7 +19,7 @@ const state = {
   calibrating: false,
   calEvents: [],
   lastHit: 0,
-  hits: 0,
+  stats: { today: 0, record: 0 },
   history: new Array(190).fill(0),
 };
 
@@ -187,6 +187,7 @@ function finalizeEval(now) {
 function handlePeak(peak) {
   state.history.push(peak);
   if (state.history.length > 190) state.history.shift();
+  reportLevel(peak);
 
   const now = performance.now();
   const cfg = state.settings;
@@ -239,25 +240,23 @@ function judgeEvent(f) {
     fireHit(f, sim, null);
   } else {
     const reason = !durOk ? t('reason.tooLong') : t('reason.otherSound');
-    rejectEvent(sim, reason);
+    rejectEvent(sim, reason, f);
   }
 }
 
 function fireHit(f, sim, note) {
-  state.hits++;
-  $('hitChip').textContent = t('hits', { count: state.hits });
   flashBadge('jeb');
-  setVerdict(true, sim, note);
-  window.jeb.fireHit({ peak: f.peak, sim });
+  setVerdict(true, sim, note, f);
+  void flushSettings().then(() => window.jeb.fireHit({ peak: f.peak, sim }));
 }
 
-function rejectEvent(sim, reason) {
+function rejectEvent(sim, reason, f) {
   flashBadge('nope');
-  setVerdict(false, sim, reason);
+  setVerdict(false, sim, reason, f);
 }
 
 // ============================================================
-//  UI
+//  UI okna głównego
 // ============================================================
 function flashBadge(kind) {
   const b = $('hitBadge');
@@ -268,45 +267,33 @@ function flashBadge(kind) {
   b.classList.add('flash');
 }
 
-function setVerdict(ok, sim, note) {
+// ostatnie zdarzenie (trafione albo odrzucone) — pokazywane w karcie "Ostatni JEB"
+let lastEvent = null;
+function setVerdict(ok, sim, note, f) {
+  lastEvent = { ok, pct: Math.round(sim * 100), note, at: Date.now(),
+    ms: f ? Math.round(f.durationMs) : null, hz: f ? Math.round(f.centroid) : null };
+  renderLastEvent();
+}
+
+function renderLastEvent() {
   const v = $('verdict');
-  const pct = Math.round(sim * 100);
-  v.classList.toggle('ok', ok);
-  v.classList.toggle('bad', !ok);
-  if (ok) v.textContent = (note ? t('verdict.jeb') : t('verdict.jebPct', { pct }));
-  else v.textContent = t('verdict.rejected', { pct });
-  if (note) $('profMeta').textContent = note;
-}
-
-function buildSpectrumBars() {
-  const el = $('profSpectrum');
-  el.innerHTML = '';
-  for (let i = 0; i < BAND_COUNT; i++) {
-    const b = document.createElement('div');
-    b.className = 'bar';
-    el.appendChild(b);
-  }
-}
-
-function drawProfile(profile) {
-  const el = $('profSpectrum');
-  const bars = el.children;
-  if (!profile) {
-    el.classList.add('empty');
-    for (const b of bars) b.style.height = '8%';
-    $('profMeta').textContent = t('profile.none');
+  const meta = $('lastMeta');
+  if (!lastEvent) {
+    v.className = 'verdict'; v.textContent = t('verdict.dash');
+    meta.textContent = t('last.none');
     return;
   }
-  el.classList.remove('empty');
-  const max = Math.max(1e-9, ...profile.bands);
-  for (let i = 0; i < bars.length; i++) {
-    bars[i].style.height = Math.max(4, (profile.bands[i] / max) * 100) + '%';
-  }
-  $('profMeta').textContent = t('profile.meta', {
-    n: profile.n,
-    ms: Math.round(profile.durationMs),
-    hz: Math.round(profile.centroid),
-  });
+  const e = lastEvent;
+  v.className = 'verdict ' + (e.ok ? 'ok' : 'bad');
+  if (e.ok) v.textContent = e.note ? t('verdict.jeb') : t('verdict.jebPct', { pct: e.pct });
+  else v.textContent = t('verdict.rejected', { pct: e.pct });
+  const ago = Math.max(0, Math.round((Date.now() - e.at) / 1000));
+  const parts = [];
+  if (e.note) parts.push(e.note);
+  if (e.ms != null) parts.push(`${e.ms} ms`);
+  if (e.hz) parts.push(`${(e.hz / 1000).toFixed(1)} kHz`);
+  parts.push(ago < 60 ? t('last.secondsAgo', { count: ago }) : t('last.minutesAgo', { count: Math.floor(ago / 60) }));
+  meta.textContent = parts.join(' · ');
 }
 
 // ---- scope ----
@@ -321,14 +308,17 @@ function drawScope() {
   const bw = W / n;
   const thr = state.settings ? state.settings.threshold : 0.25;
   const thrY = H - gamma(thr) * H;
+  const dim = !state.armed;
 
   for (let i = 0; i < n; i++) {
     const v = state.history[i];
     const h = gamma(v) * H;
     const x = i * bw;
-    if (v >= thr) {
+    if (v >= thr && !dim) {
       sctx.fillStyle = 'rgba(255,43,214,0.95)';
       sctx.shadowColor = '#ff2bd6'; sctx.shadowBlur = 12;
+    } else if (dim) {
+      sctx.fillStyle = 'rgba(80,80,120,0.55)'; sctx.shadowBlur = 0;
     } else {
       const g = sctx.createLinearGradient(0, H, 0, 0);
       g.addColorStop(0, 'rgba(0,232,255,0.25)');
@@ -344,42 +334,24 @@ function drawScope() {
   sctx.beginPath(); sctx.moveTo(0, thrY); sctx.lineTo(W, thrY); sctx.stroke();
   sctx.setLineDash([]);
   sctx.fillStyle = 'rgba(255,255,255,0.6)';
-  sctx.font = '12px Consolas, monospace';
-  sctx.fillText(t('scope.threshold', { val: thr.toFixed(2) }), 8, Math.max(14, thrY - 6));
+  sctx.font = '14px Consolas, monospace';
+  sctx.fillText(t('scope.threshold', { val: thr.toFixed(2) }), 8, Math.max(16, thrY - 6));
 
   requestAnimationFrame(drawScope);
 }
 
-// ---- knob ----
-function makeKnob(el, { min, max, value, onChange }) {
-  let val = value;
-  const setVisual = () => {
-    const norm = (val - min) / (max - min);
-    el.style.setProperty('--ang', (-135 + norm * 270) + 'deg');
-    el.style.setProperty('--pct', (norm * 75) + '%');
-  };
-  const apply = (v, fire = true) => {
-    val = Math.min(max, Math.max(min, v));
-    setVisual();
-    if (fire) onChange(val);
-  };
-  setVisual();
-  let dragging = false, startY = 0, startVal = 0;
-  el.addEventListener('pointerdown', (e) => { dragging = true; startY = e.clientY; startVal = val; el.setPointerCapture(e.pointerId); });
-  el.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
-    const dy = startY - e.clientY;
-    apply(startVal + (dy / 200) * (max - min));
-  });
-  const end = () => { dragging = false; };
-  el.addEventListener('pointerup', end);
-  el.addEventListener('pointercancel', end);
-  el.addEventListener('wheel', (e) => { e.preventDefault(); apply(val - Math.sign(e.deltaY) * (max - min) * 0.02); }, { passive: false });
-  return { get: () => val, set: (v) => apply(v, false) };
+// ---- poziom sygnału → wskaźnik w oknie ustawień (~15 Hz) ----
+let levelMax = 0, levelSentAt = 0;
+function reportLevel(peak) {
+  levelMax = Math.max(levelMax, peak);
+  const now = performance.now();
+  if (now - levelSentAt < 66) return;
+  window.jeb.sendLevel(levelMax);
+  levelMax = 0; levelSentAt = now;
 }
 
 // ============================================================
-//  ARM / kalibracja / urządzenia / ustawienia
+//  ARM / szybki wybór akcji / stopka
 // ============================================================
 function reflectArmed(armed) {
   state.armed = armed;
@@ -388,29 +360,128 @@ function reflectArmed(armed) {
   const st = $('statusText');
   st.textContent = armed ? t('status.armed') : t('status.asleep');
   st.classList.toggle('on', armed);
+  $('statusSub').textContent = armed ? t('status.armedSub', { action: activeLabel() }) : t('status.asleepSub');
 }
 
+const keyLabel = (key) => t(`keys.${key}`, { defaultValue: String(key).toUpperCase() });
+
+function activeLabel() {
+  const s = state.settings;
+  const a = s.actions.find((x) => x.id === s.activeAction);
+  return a ? (a.name || t('actions.untitled')) : keyLabel(s.keyToSend);
+}
+
+const ICONS = {
+  key: '<path d="M20 5v7a3 3 0 0 1-3 3H5"/><path d="m9 11-4 4 4 4"/>',
+  command: '<path d="m5 7 5 5-5 5"/><path d="M12 18h7"/>',
+  script: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+};
+function icon(name) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('width', '14'); svg.setAttribute('height', '14');
+  svg.setAttribute('aria-hidden', 'true');
+  // ikony są stałymi z kodu, nie danymi użytkownika
+  svg.innerHTML = ICONS[name];
+  return svg;
+}
+
+function renderPicker() {
+  const s = state.settings;
+  const picker = $('actionPicker');
+  picker.replaceChildren();
+  const entries = [{ id: 'key', label: keyLabel(s.keyToSend), kind: 'key' },
+    ...s.actions.map((a) => ({ id: a.id, label: a.name || t('actions.untitled'), kind: a.type }))];
+  for (const e of entries) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip';
+    b.setAttribute('role', 'radio');
+    b.setAttribute('aria-checked', String(e.id === s.activeAction));
+    b.append(icon(e.kind));
+    const label = document.createElement('span');
+    label.textContent = e.label;
+    b.append(label);
+    b.addEventListener('click', async () => {
+      if (state.settings.activeAction === e.id) return;
+      saveSettings({ activeAction: e.id });
+      $('actionError').textContent = '';
+      renderPicker();
+      reflectArmed(state.armed);
+      await flushSettings();
+      void checkPermission();
+    });
+    picker.append(b);
+  }
+  const add = document.createElement('button');
+  add.type = 'button';
+  add.className = 'chip add';
+  add.setAttribute('aria-label', t('pick.manage'));
+  add.title = t('pick.manage');
+  add.append(icon('plus'));
+  add.addEventListener('click', () => window.jeb.openSettings('actions'));
+  picker.append(add);
+
+  const a = s.actions.find((x) => x.id === s.activeAction);
+  $('actionHint').textContent = a ? (a.type === 'script' ? a.scriptPath : a.command) || t('actions.empty') : t('pick.keyHint', { key: keyLabel(s.keyToSend) });
+}
+
+function renderFooter() {
+  const s = state.settings;
+  $('recordText').textContent = t('records.summary', state.stats);
+  $('hitChip').textContent = t('records.today', { count: state.stats.today });
+  $('readout').textContent = t('pick.readout', {
+    thr: s.threshold.toFixed(2), match: Math.round(s.matchStrictness * 100), cd: s.cooldownMs,
+  });
+}
+
+// ---- uprawnienia macOS: zamiast suchego błędu — co włączyć i przycisk do Ustawień systemowych ----
+let permKind = null;
+function showPermission(kind) {
+  permKind = kind;
+  $('permBox').hidden = !kind;
+  if (!kind) return;
+  $('actionError').textContent = '';
+  $('permText').textContent = t(`perm.${kind}`);
+}
+
+// Dostępność da się sprawdzić bez odpalania akcji; Automatyzację zgłasza dopiero błąd osascript.
+async function checkPermission() {
+  if (state.settings.activeAction !== 'key') { if (permKind === 'accessibility') showPermission(null); return; }
+  const status = await window.jeb.permissionStatus();
+  if (!status.accessibility) showPermission('accessibility');
+  else if (permKind === 'accessibility') showPermission(null);
+}
+
+let toastTimer;
+function showRecord(count) {
+  const toast = $('recordToast');
+  toast.textContent = t('records.message', { count });
+  toast.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toast.hidden = true; }, 5000);
+}
+
+// ============================================================
+//  Kalibracja — uruchamiana z okna ustawień, wykonywana tutaj
+// ============================================================
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function calibrate(thresholdKnob) {
+async function calibrate() {
   if (state.calibrating) return;
-  const btn = $('btnCalibrate');
-  const status = $('calStatus');
-  status.classList.remove('ok');
-  btn.classList.add('live');
+  const report = (p) => window.jeb.reportCalibration(p);
 
-  for (const c of ['3…', '2…', '1…']) { status.textContent = t('calib.prepare', { t: c }); await sleep(700); }
-  status.textContent = t('calib.go');
+  for (const c of ['3…', '2…', '1…']) { report({ key: 'calib.prepare', opts: { t: c }, live: true }); await sleep(700); }
+  report({ key: 'calib.go', live: true });
 
   state.calEvents = [];
   state.calibrating = true;
   await sleep(4000);
   state.calibrating = false;
-  btn.classList.remove('live');
 
   const events = state.calEvents.slice();
   if (events.length === 0) {
-    status.textContent = t('calib.nothing');
+    report({ key: 'calib.nothing', done: true });
     return;
   }
 
@@ -426,61 +497,46 @@ async function calibrate(thresholdKnob) {
   const threshold = Math.min(0.9, Math.max(0.02, peak * 0.55));
   const profile = { bands, flatness, centroid, durationMs, peak, n };
 
-  thresholdKnob.set(threshold);
-  $('valThreshold').textContent = threshold.toFixed(2);
   saveSettings({ threshold, profile });
-  drawProfile(profile);
-
-  status.classList.add('ok');
-  status.textContent = t('calib.done', {
-    count: n,
-    threshold: threshold.toFixed(2),
-    ms: Math.round(durationMs),
-  });
+  await flushSettings();
+  renderFooter();
+  report({ key: 'calib.done', opts: { count: n, threshold: threshold.toFixed(2), ms: Math.round(durationMs) }, ok: true, done: true });
 }
 
+// ============================================================
+//  Ustawienia — zapis z opóźnieniem, synchronizacja z oknem ustawień
+// ============================================================
 let saveTimer = null;
+let pendingSettings = {};
 function saveSettings(partial) {
   state.settings = { ...state.settings, ...partial };
+  pendingSettings = { ...pendingSettings, ...partial };
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => window.jeb.setSettings(partial), 200);
+  saveTimer = setTimeout(flushSettings, 200);
+}
+async function flushSettings() {
+  clearTimeout(saveTimer);
+  const partial = pendingSettings;
+  pendingSettings = {};
+  if (Object.keys(partial).length) state.settings = { ...await window.jeb.setSettings(partial), ...pendingSettings };
 }
 
-async function populateDevices(selected) {
-  const sel = $('deviceSelect');
-  const devices = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'audioinput');
-  sel.innerHTML = '';
-  const def = document.createElement('option');
-  def.value = ''; def.textContent = t('device.systemDefault');
-  sel.appendChild(def);
-  devices.forEach((d, i) => {
-    const o = document.createElement('option');
-    o.value = d.deviceId; o.textContent = d.label || t('device.input', { n: i + 1 });
-    sel.appendChild(o);
-  });
-  sel.value = selected || '';
+async function applyExternalSettings(next) {
+  const prev = state.settings;
+  state.settings = { ...next, ...pendingSettings };
+  if (prev.deviceId !== next.deviceId) {
+    try { await detector.start(next.deviceId); } catch (err) { console.error(err); }
+  }
+  if (prev.language !== next.language) await window.i18n.change(next.language);
+  renderAll();
 }
 
-// ============================================================
-//  Język (PL ⇄ EN)
-// ============================================================
-// odświeża teksty generowane dynamicznie (statyczne ogarnia i18n.apply)
-function refreshDynamicText() {
-  $('btnLang').textContent = window.i18n.language.toUpperCase();
+function renderAll() {
+  if (permKind) showPermission(permKind);
   reflectArmed(state.armed);
-  $('hitChip').textContent = t('hits', { count: state.hits });
-  drawProfile(state.settings.profile);
-  populateDevices(state.settings.deviceId);
-}
-
-function setupLanguageToggle() {
-  $('btnLang').textContent = window.i18n.language.toUpperCase();
-  $('btnLang').addEventListener('click', async () => {
-    const next = window.i18n.other();
-    await window.i18n.change(next);
-    saveSettings({ language: next });
-  });
-  window.i18n.onChange(refreshDynamicText);
+  renderPicker();
+  renderFooter();
+  renderLastEvent();
 }
 
 // ============================================================
@@ -491,44 +547,45 @@ async function init() {
 
   // i18n: język z ustawień (null = autodetekcja z systemu)
   await window.i18n.init(state.settings.language);
-  setupLanguageToggle();
+  window.i18n.onChange(renderAll);
 
-  reflectArmed(state.settings.armed);
-  buildSpectrumBars();
-  drawProfile(state.settings.profile);
-
-  const kThr = makeKnob($('knobThreshold'), {
-    min: 0.01, max: 0.9, value: state.settings.threshold,
-    onChange: (v) => { $('valThreshold').textContent = v.toFixed(2); saveSettings({ threshold: v }); },
-  });
-  $('valThreshold').textContent = state.settings.threshold.toFixed(2);
-
-  const kMatch = makeKnob($('knobMatch'), {
-    min: 0.5, max: 0.98, value: state.settings.matchStrictness,
-    onChange: (v) => { $('valMatch').textContent = Math.round(v * 100) + '%'; saveSettings({ matchStrictness: v }); },
-  });
-  $('valMatch').textContent = Math.round(state.settings.matchStrictness * 100) + '%';
-
-  const kCool = makeKnob($('knobCooldown'), {
-    min: 50, max: 1500, value: state.settings.cooldownMs,
-    onChange: (v) => { const ms = Math.round(v); $('valCooldown').textContent = ms + ' ms'; saveSettings({ cooldownMs: ms }); },
-  });
-  $('valCooldown').textContent = state.settings.cooldownMs + ' ms';
-
-  $('keyName').textContent = (state.settings.keyToSend || 'enter').toUpperCase();
-  $('startMin').checked = !!state.settings.startMinimized;
-  $('startMin').addEventListener('change', (e) => saveSettings({ startMinimized: e.target.checked }));
+  state.armed = state.settings.armed;
+  $('appVersion').textContent = `v${await window.jeb.getVersion()}`;
+  state.stats = await window.jeb.getStats();
+  renderAll();
+  setInterval(async () => { state.stats = await window.jeb.getStats(); renderFooter(); }, 10000);
+  setInterval(() => { if (lastEvent) renderLastEvent(); }, 1000);
 
   $('armSwitch').addEventListener('click', async () => { reflectArmed(await window.jeb.setArmed(!state.armed)); });
   window.jeb.onArmedChanged(reflectArmed);
+  window.jeb.onSettingsChanged(applyExternalSettings);
+  window.jeb.onCalibrationStart(() => { void calibrate(); });
 
-  $('btnCalibrate').addEventListener('click', () => calibrate(kThr));
-
+  $('btnSettings').addEventListener('click', () => window.jeb.openSettings());
+  $('readout').addEventListener('click', () => window.jeb.openSettings('detect'));
   $('btnMin').addEventListener('click', () => window.jeb.windowMinimize());
-  $('btnHide').addEventListener('click', () => window.jeb.windowHide());
-  $('btnQuit').addEventListener('click', () => window.jeb.quit());
+  $('btnHide').addEventListener('click', async () => { await flushSettings(); window.jeb.windowHide(); });
+  $('btnQuit').addEventListener('click', async () => { await flushSettings(); window.jeb.quit(); });
+  window.addEventListener('blur', () => { void flushSettings(); });
 
-  window.jeb.onHitFired(() => {
+  window.jeb.onActionError((payload) => {
+    const { message, permission } = typeof payload === 'string' ? { message: payload } : payload;
+    if (permission) showPermission(permission);
+    else $('actionError').textContent = t('action.error', { message });
+  });
+  $('permOpen').addEventListener('click', () => window.jeb.openPermission(permKind));
+  $('permRecheck').addEventListener('click', async () => {
+    if (permKind === 'automation') showPermission(null); // potwierdzi to dopiero następny JEB
+    await checkPermission();
+  });
+  window.addEventListener('focus', () => { void checkPermission(); });
+  void checkPermission();
+  window.jeb.onHitFired(({ stats, newRecord }) => {
+    state.stats = stats;
+    $('actionError').textContent = '';
+    if (permKind === 'automation') showPermission(null);
+    renderFooter();
+    if (newRecord && state.settings.recordNotifications) showRecord(stats.today);
     $('led').animate(
       [{ boxShadow: '0 0 10px #00e8ff, 0 0 22px #00e8ff' },
        { boxShadow: '0 0 18px #ff2bd6, 0 0 40px #ff2bd6' },
@@ -538,16 +595,9 @@ async function init() {
 
   try {
     await detector.start(state.settings.deviceId);
-    await populateDevices(state.settings.deviceId);
   } catch (err) {
-    $('calStatus').textContent = t('mic.denied', { err: err.message });
+    $('actionError').textContent = t('mic.denied', { err: err.message });
   }
-
-  $('deviceSelect').addEventListener('change', async (e) => {
-    const id = e.target.value || null;
-    saveSettings({ deviceId: id });
-    try { await detector.start(id); } catch (err) { console.error(err); }
-  });
 
   document.addEventListener('pointerdown', () => {
     if (detector.ctx && detector.ctx.state === 'suspended') detector.ctx.resume();

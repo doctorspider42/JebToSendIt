@@ -1,144 +1,83 @@
 # ⚡ JebToSendIt
 
-> 🌍 **Język / Language:** **Polski** · [English](README.md)
+**Jebnij w laptopa — wyślij Enter, uruchom polecenie albo skrypt.**
 
-**Jebnij w laptopa — poleci ENTER.** Serio, o to chodzi w całej aplikacji.
+[English](README.md) · Polski
 
-<p align="center">
-  <img src="docs/screenshot.png" width="380" alt="Interfejs JebToSendIt" />
-</p>
+Aplikacja nasłuchuje krótkich uderzeń przez mikrofon. Kalibracja uczy się widma
+oraz długości jebnięcia i odróżnia je od mowy. Program działa w tle, w trayu.
 
-JebToSendIt siedzi w tle, słucha mikrofonu i kiedy walniesz w obudowę — wysyła **ENTER**
-do okna, które masz akurat na wierzchu. Do tego fikuśny, futurystyczny, neonowy interfejs
-i ikonka w trayu. Po co? A bo można. 🤷
+![Interfejs JebToSendIt](docs/screenshot.png)
 
-> Apka mówi po polsku **i** po angielsku — przełącznik **PL/EN** masz w prawym górnym rogu
-> okna (startuje w języku Twojego systemu).
+## Start
 
-<p align="center">
-  <a href="https://github.com/doctorspider42/JebToSendIt/releases/latest">
-    <b>⬇️ Pobierz najnowszą wersję (.exe)</b>
-  </a><br>
-  ściągasz, klikasz, jebiesz — nic nie instaluje
-</p>
+Pobierz pliki z [Releases](https://github.com/doctorspider42/JebToSendIt/releases/latest):
 
----
+- **Windows 10/11:** uruchom przenośny plik `.exe` x64.
+- **macOS:** wybierz DMG `arm64` dla Apple Silicon albo `x64` dla Intela i przeciągnij
+  aplikację do Applications. Podpisanie i notaryzacja wydań wymagają konfiguracji
+  opisanej w [instrukcji pipeline](docs/releases.md).
 
-## 🚀 Szybki start
+Zezwól na mikrofon. W macOS wysyłanie Entera wymaga też **Ustawienia systemowe →
+Prywatność i ochrona → Dostępność** oraz zgody w **Automatyzacja → System Events**,
+gdy system o nią poprosi. Po zmianie uprawnień może być potrzebny restart aplikacji.
 
-Nie ma instalatora — jest **jeden plik `.exe`**.
+Okno główne pokazuje tylko to, co potrzebne w trakcie pracy: ARM, scope, ostatni
+JEB i szybki wybór akcji. Cała reszta siedzi w oknie **Ustawienia** (zębatka albo
+menu traya).
 
-1. Pobierz `JebToSendIt-…-portable.exe` z **[Releases](https://github.com/doctorspider42/JebToSendIt/releases/latest)**
-   (albo zbuduj sam — patrz [niżej](#-build--jeden-plik-exe)).
-2. Odpal go. Nic nie instaluje, po prostu działa.
-3. Za pierwszym razem apka poprosi o dostęp do mikrofonu — zgódź się, inaczej nie ma czego słuchać.
+1. Uzbrój detektor przełącznikiem ARM lub z menu traya.
+2. W **Ustawienia → Kalibracja** uruchom kalibrację i po odliczaniu jebnij 2–3 razy.
+3. W **Ustawienia → Detekcja** ustaw próg, dopasowanie widma i cooldown, przeciągając
+   pokrętła, kręcąc kółkiem lub strzałkami, i wybierz wejście audio.
+4. W **Ustawienia → Akcje** zdefiniuj własne akcje: nazwa plus polecenie powłoki albo
+   skrypt (wybór pliku lub pełna ścieżka); **Przetestuj** odpala ją od ręki. Wbudowana
+   akcja **Klawisz** domyślnie wysyła Enter — klawisz można zmienić. W oknie głównym,
+   w **JEB ROBI**, wybierasz, co odpala jebnięcie.
+5. Licznik pokazuje dzisiejsze jebnięcia i rekord dnia. Stan przeżywa restart,
+   a dzień zmienia się o lokalnej północy. Po pobiciu rekordu raz dziennie pojawia
+   się komunikat w aplikacji i powiadomienie systemowe. Opcja **Powiadamiaj o nowym
+   rekordzie dnia** wyłącza oba komunikaty, pozostawiając zliczanie. Kalibracja
+   i rozbrojony detektor nie naliczają jebnięć. Błąd akcji nie cofa naliczenia.
 
-Wolisz z palca, w trybie dev?
+Polecenia wykonują się w PowerShell na Windowsie lub zsh na macOS. Skrypty:
+`.js`, `.cjs`, `.mjs` (wbudowany Node), `.py` (Python), `.ps1` (PowerShell), `.sh`
+i `.zsh`. Poza JS wymagany jest zainstalowany interpreter. Skrypt działa ze swojego
+katalogu; polecenie korzysta z katalogu roboczego i środowiska aplikacji. Wykonuje
+się jedna akcja naraz, z limitem 30 sekund. Kolejne jebnięcie podczas wykonywania
+akcji nadal się liczy, ale zgłasza zajętość. Błędy są widoczne w interfejsie.
 
-```powershell
-npm install
+Schowanie okna pozostawia program w trayu; Zamknij kończy działanie. Język
+(Systemowy, Polski, English) zmienisz w **Ustawienia → Aplikacja**. Ustawienia i statystyki są lokalne, w katalogu danych użytkownika Electrona.
+
+## Rozwój i budowanie
+
+Wymagany **Node.js 26**. Zależności: Electron 45, electron-builder 26,
+electron-store 12 i i18next 26.
+
+```sh
+nvm use
+npm ci
 npm start
+npm run check
+npm test
+npm run smoke
 ```
 
----
-
-## 🎯 Jak tego używać
-
-1. **Uzbrój** — kliknij przełącznik **ARM** (albo z menu w trayu). Dioda zapala się na
-   cyjanowo = apka słucha.
-2. **Skalibruj jebnięcie** — kliknij **KALIBRUJ**, poczekaj na odliczanie i **jebnij
-   2-3 razy** w laptopa. Apka zapamięta, jak brzmi i jak długo trwa Twoje uderzenie.
-   Od teraz inne dźwięki (gadanie, muzyka, trzaśnięcie drzwiami) nie będą puszczać ENTER.
-3. **Jeb = ENTER.** Tyle. Walnij w obudowę → leci ENTER do aktywnego okna. Badge „JEB!"
-   mignie na potwierdzenie; jak dźwięk nie pasuje do profilu, zobaczysz „**???**".
-4. Zamknięcie okna **chowa apkę do traya** (nie zamyka). Klik w ikonę = pokaż / schowaj.
-   Żeby wyjść na serio: menu w trayu → *Zamknij*.
-
-### Pokrętła
-
-Kręcisz myszą (góra / dół) albo scrollem:
-
-- **PRÓG** — czułość. Niżej = łatwiej wyzwolić (ale i łatwiej o przypadek).
-- **DOPASOWANIE** — jak bardzo dźwięk ma pasować do profilu jebnięcia. Wyżej = bardziej wybredne.
-- **COOLDOWN** — minimalna przerwa między jebnięciami, żeby jedno walnięcie nie poszło jako pięć.
-
-Panel **PROFIL JEBNIĘCIA** pokazuje „odcisk" Twojego uderzenia i werdykt ostatniego dźwięku
-(`JEB ✓` albo `???` z procentem dopasowania).
-
-> Okno za małe na Twój ekran? Treść się przewija, a samo okno możesz rozciągnąć.
-
----
-
-## 🔨 Build → jeden plik .exe
-
-```powershell
-.\build.ps1
+```sh
+npm run build:win  # portable EXE x64, na Windowsie
+npm run build:mac  # DMG Apple Silicon + Intel, na macOS
 ```
 
-Wypluje `dist\JebToSendIt-0.2.0-portable.exe` — jeden plik, bez instalatora.
-(To samo robi `npm run build`.)
+Dostępne są też `build.ps1` i `build.sh`. [Instrukcja wydań](docs/releases.md)
+opisuje podpisywanie certyfikatem Zittera, lokalny profil Keychain `zitter-notary`,
+sekrety GitHuba, notaryzację i weryfikację. Pipeline używa Node 26 i testuje trzy
+systemy; tag wersji publikuje wspólne wydanie Windows + macOS.
 
-> Skrypt sam ogarnia znany problem electron-buildera na Windowsie (paczka `winCodeSign`
-> z macOS-owymi symlinkami) — nie potrzebujesz trybu deweloperskiego ani praw admina.
-
----
-
-## 🧠 Z czego to jest zrobione (dla ciekawskich)
-
-Electron + Web Audio do analizy mikrofonu, a ENTER leci przez PowerShell `SendKeys`
-(bez modułów natywnych, dzięki czemu build jest banalnie prosty). Tłumaczenia ogarnia
-[**i18next**](https://www.i18next.com/) — jeden zestaw zasobów dzielony przez interfejs i tray.
-
-Pod maską detekcja to nie jest zwykłe „głośno = ENTER":
-
-```
-mic ─► AudioWorklet (peak co ~10 ms) ─► próg ─► okno oceny ~90 ms
-                                                       │
-          kształt widma (8 pasm) + długość  ◄──────────┘
-                          │
-              pasuje do profilu?  ──► tak ──► ENTER
-```
-
-- **AudioWorklet** liczy szczyt na surowych próbkach — łapie nawet bardzo krótkie walnięcie.
-- Po przekroczeniu progu rusza ~90 ms okno oceny, w którym sprawdzane jest **brzmienie**
-  (energia w 8 logarytmicznych pasmach, porównywana z profilem) oraz **długość** (jeb to
-  krótki transjent; dźwięki, które się ciągną, lecą w kosz).
-- ENTER leci **tylko** gdy widmo pasuje (powyżej suwaka *DOPASOWANIE*) **i** dźwięk jest krótki.
-- **Wysyłanie klawisza** ([src/main/keysender.js](src/main/keysender.js)): trwały proces
-  PowerShell ładuje raz `System.Windows.Forms` i woła `SendKeys`. Warstwa jest abstrakcyjna —
-  macOS (`osascript`) i Linux (`xdotool`) to gotowe miejsce na przyszły port.
-
-> Apka jest na Windowsa, ale napisana tak, żeby przeniesienie na maca/linuxa sprowadzało
-> się głównie do dopisania jednej warstwy (wysyłanie klawisza).
-
-### Struktura
-
-```
-src/
-  main/
-    main.js        proces główny: okno, tray, IPC, i18n traya
-    keysender.js   warstwa wysyłania klawisza (Windows: PowerShell SendKeys)
-    settings.js    trwałe ustawienia (electron-store)
-  preload.js       most contextBridge (bezpieczne API dla UI)
-  renderer/
-    index.html     interfejs
-    styles.css     neonowy, futurystyczny styl
-    renderer.js    detekcja, pokrętła, scope, kalibracja, dopasowanie
-    worklet.js     AudioWorklet — pomiar peaku
-    i18n.js        inicjalizacja i18next w rendererze
-    locales.js     zasoby tłumaczeń (PL/EN) — wspólne dla UI i traya
-    vendor/        wbudowany i18next (UMD)
-tools/gen-icon.js  generator ikony (PNG bez zależności)
-tools/capture.js   pomocniczy zrzut UI do README
-build.ps1          build portable EXE
-```
-
-### Wymagania
-
-- [Node.js](https://nodejs.org/) 18+ (testowane na 22)
-- Windows 10 / 11
-
----
+Detekcja korzysta z AudioWorklet, ośmiu pasm widma i porównania długości impulsu.
+Enter wysyłany jest przez PowerShell SendKeys na Windowsie i AppleScript/System
+Events na macOS. Renderer działa w sandboxie, z izolacją kontekstu i wąskim API
+preload. Linux służy do testów; wysyłanie Entera nie jest tam zaimplementowane.
 
 ## Licencja
 

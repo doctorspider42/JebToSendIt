@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self';" />
+  <title>JebToSendIt — Settings</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="settings-page">
+  <div class="bezel">
+    <header class="titlebar">
+      <div class="brand">
+        <span class="name">JEB<span class="accent">TO</span>SENDIT</span>
+        <span class="ver" data-i18n="settings.title">SETTINGS</span>
+      </div>
+      <div class="winbtns">
+        <button id="btnClose" class="winbtn quit" data-i18n-title="win.close" data-i18n-aria="win.close">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5 5 19"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="settings-body">
+      <nav class="side-nav" data-i18n-aria="settings.sections">
+        <button type="button" class="nav-item" data-tab="detect"><b data-i18n="tabs.detect">Detection</b><span data-i18n="tabs.detectSub">threshold, match, mic</span></button>
+        <button type="button" class="nav-item" data-tab="calib"><b data-i18n="tabs.calib">Calibration</b><span data-i18n="tabs.calibSub">your JEB profile</span></button>
+        <button type="button" class="nav-item" data-tab="actions"><b data-i18n="tabs.actions">Actions</b><span data-i18n="tabs.actionsSub">key + custom actions</span></button>
+        <button type="button" class="nav-item" data-tab="stats"><b data-i18n="tabs.stats">Stats</b><span data-i18n="tabs.statsSub">today and record</span></button>
+        <button type="button" class="nav-item" data-tab="app"><b data-i18n="tabs.app">App</b><span data-i18n="tabs.appSub">language, startup</span></button>
+      </nav>
+
+      <main class="pane">
+        <!-- DETEKCJA -->
+        <section class="tab" data-pane="detect">
+          <div class="pane-head">
+            <h2 data-i18n="tabs.detect">Detection</h2>
+            <p data-i18n="detect.sub">When a sound counts as a JEB. Drag a knob up / down or scroll.</p>
+          </div>
+          <div class="knobs card">
+            <div class="knob-cell">
+              <div class="knob" id="knobThreshold" tabindex="0" role="slider" data-i18n-aria="knob.threshold"></div>
+              <div class="knob-label" data-i18n="knob.threshold">THRESHOLD</div>
+              <div class="knob-val" id="valThreshold">0.25</div>
+              <div class="knob-help" data-i18n="knob.thresholdHelp">lower = more sensitive</div>
+            </div>
+            <div class="knob-cell">
+              <div class="knob" id="knobMatch" tabindex="0" role="slider" data-i18n-aria="knob.match"></div>
+              <div class="knob-label" data-i18n="knob.match">MATCH</div>
+              <div class="knob-val" id="valMatch">80%</div>
+              <div class="knob-help" data-i18n="knob.matchHelp">how close to the profile</div>
+            </div>
+            <div class="knob-cell">
+              <div class="knob" id="knobCooldown" tabindex="0" role="slider" data-i18n-aria="knob.cooldown"></div>
+              <div class="knob-label" data-i18n="knob.cooldown">COOLDOWN</div>
+              <div class="knob-val" id="valCooldown">350 ms</div>
+              <div class="knob-help" data-i18n="knob.cooldownHelp">pause after a JEB</div>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label" for="deviceSelect" data-i18n="device.title">AUDIO INPUT</label>
+            <select id="deviceSelect" class="select"></select>
+            <div class="level-row"><span data-i18n="device.level">Level</span><div class="level"><div id="levelBar" class="level-bar"></div></div></div>
+          </div>
+        </section>
+
+        <!-- KALIBRACJA -->
+        <section class="tab" data-pane="calib" hidden>
+          <div class="pane-head">
+            <h2 data-i18n="tabs.calib">Calibration</h2>
+            <p data-i18n="calib.hint">I'll record the sound and length of your JEB — a shout won't trigger the action.</p>
+          </div>
+          <div class="card profile-row">
+            <div id="profSpectrum" class="spectrum"></div>
+            <div class="profile-info">
+              <span class="field-label" data-i18n="profile.title">JEB PROFILE</span>
+              <span id="profMeta" class="profmeta" data-i18n="profile.none">no profile — calibrate your JEB</span>
+            </div>
+          </div>
+          <button id="btnCalibrate" class="cta" data-i18n="calib.button">CALIBRATE — JEB 2-3 TIMES</button>
+          <p id="calStatus" class="cal-status" aria-live="polite"></p>
+        </section>
+
+        <!-- AKCJE -->
+        <section class="tab" data-pane="actions" hidden>
+          <div class="pane-head row">
+            <div>
+              <h2 data-i18n="tabs.actions">Actions</h2>
+              <p data-i18n="actions.sub">Define them here — pick one quickly in the main window.</p>
+            </div>
+            <button id="btnNewAction" type="button" class="btn-accent" data-i18n="actions.new">+ New action</button>
+          </div>
+          <div id="actionList" class="action-list" role="listbox" data-i18n-aria="tabs.actions"></div>
+
+          <div class="card editor">
+            <div id="keyEditor" class="field" hidden>
+              <label class="field-label" for="keySelect" data-i18n="actions.keyLabel">KEY TO SEND</label>
+              <select id="keySelect" class="select">
+                <option value="enter" data-i18n="keys.enter">Enter</option>
+                <option value="space" data-i18n="keys.space">Space</option>
+                <option value="tab" data-i18n="keys.tab">Tab</option>
+                <option value="esc" data-i18n="keys.esc">Esc</option>
+                <option value="up" data-i18n="keys.up">Up</option>
+                <option value="down" data-i18n="keys.down">Down</option>
+                <option value="left" data-i18n="keys.left">Left</option>
+                <option value="right" data-i18n="keys.right">Right</option>
+              </select>
+              <span class="help" data-i18n="actions.keyHelp">The built-in action can't be deleted — only its key changes.</span>
+            </div>
+
+            <div id="customEditor" hidden>
+              <div class="grid2">
+                <div class="field">
+                  <label class="field-label" for="actName" data-i18n="actions.name">NAME</label>
+                  <input id="actName" class="select" type="text" maxlength="60" spellcheck="false" />
+                </div>
+                <div class="field">
+                  <span class="field-label" data-i18n="actions.type">TYPE</span>
+                  <div class="segmented" role="radiogroup" data-i18n-aria="actions.type">
+                    <button type="button" role="radio" data-type="command" data-i18n="action.commandShort">Command</button>
+                    <button type="button" role="radio" data-type="script" data-i18n="action.scriptShort">Script</button>
+                  </div>
+                </div>
+              </div>
+              <div id="commandFields" class="field">
+                <label class="field-label" for="commandInput" data-i18n="action.commandLabel">SHELL COMMAND</label>
+                <textarea id="commandInput" class="select mono" rows="3" spellcheck="false"></textarea>
+                <span class="help" data-i18n="action.commandHelp">PowerShell on Windows, zsh on macOS.</span>
+              </div>
+              <div id="scriptFields" class="field" hidden>
+                <label class="field-label" for="scriptPath" data-i18n="action.scriptLabel">SCRIPT PATH</label>
+                <div class="inline">
+                  <input id="scriptPath" class="select mono" type="text" spellcheck="false" />
+                  <button id="chooseScript" type="button" class="btn-outline" data-i18n="action.browse">Choose…</button>
+                </div>
+                <span class="help" data-i18n="action.scriptHelp">JS, Python, PowerShell, sh, zsh — the interpreter must be installed.</span>
+              </div>
+              <div class="editor-actions">
+                <button id="btnTest" type="button" class="btn-plain" data-i18n="actions.test">Test</button>
+                <button id="btnDelete" type="button" class="btn-danger" data-i18n="actions.delete">Delete</button>
+              </div>
+              <p id="testResult" class="cal-status" role="status"></p>
+            </div>
+          </div>
+          <p class="help" data-i18n="action.limits">One action at a time, 30 s limit.</p>
+        </section>
+
+        <!-- STATYSTYKI -->
+        <section class="tab" data-pane="stats" hidden>
+          <div class="pane-head">
+            <h2 data-i18n="tabs.stats">Stats</h2>
+            <p data-i18n="records.sub">Today's JEB count and your best day.</p>
+          </div>
+          <div class="grid2">
+            <div class="card stat"><span class="field-label" data-i18n="records.todayLabel">TODAY</span><span id="statToday" class="stat-num cyan">0</span></div>
+            <div class="card stat"><span class="field-label" data-i18n="records.recordLabel">BEST DAY</span><span id="statRecord" class="stat-num mag">0</span></div>
+          </div>
+          <label class="chk"><input type="checkbox" id="recordNotifications" /> <span data-i18n="records.toggle">Notify about a new daily record</span></label>
+        </section>
+
+        <!-- APLIKACJA -->
+        <section class="tab" data-pane="app" hidden>
+          <div class="pane-head">
+            <h2 data-i18n="tabs.app">App</h2>
+            <p data-i18n="app.sub">Language and startup behaviour.</p>
+          </div>
+          <div class="field">
+            <span class="field-label" data-i18n="app.language">LANGUAGE</span>
+            <div class="segmented lang" role="radiogroup" data-i18n-aria="app.language">
+              <button type="button" role="radio" data-lang="" data-i18n="app.langSystem">System</button>
+              <button type="button" role="radio" data-lang="pl">Polski</button>
+              <button type="button" role="radio" data-lang="en">English</button>
+            </div>
+          </div>
+          <label class="chk"><input type="checkbox" id="startMin" /> <span data-i18n="footer.startMin">Start minimized to the tray</span></label>
+          <p class="help" id="appVersion"></p>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="vendor/i18next.min.js"></script>
+  <script src="locales.js"></script>
+  <script src="i18n.js"></script>
+  <script src="settings.js"></script>
+</body>
+</html>
