@@ -1,19 +1,10 @@
 'use strict';
 // electron-builder notarizes/staples the app; notarize the signed DMG separately.
-const { spawnSync } = require('node:child_process');
+const { runApple: run } = require('./retry-apple');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const crypto = require('node:crypto');
-function run(cmd, args, capture = false) {
-  const result = spawnSync(cmd, args, { encoding: 'utf8', stdio: capture ? 'pipe' : 'inherit' });
-  if (result.status !== 0) {
-    // Never include command arguments: notarytool receives a private credential.
-    if (capture && result.stderr) process.stderr.write(result.stderr);
-    throw new Error(`${cmd} failed (exit ${result.status}). Inspect the Apple submission before retrying.`);
-  }
-  return result.stdout;
-}
 // Kolejność: profil z lokalnego Pęku kluczy → klucz App Store Connect API (CI) → Apple ID + hasło do aplikacji.
 const env = process.env;
 const credentials = env.APPLE_KEYCHAIN_PROFILE

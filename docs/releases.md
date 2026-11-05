@@ -94,6 +94,10 @@ Development, Linux and Windows portable builds do not start the updater. Older
 versions without the updater require a manual installation of this release;
 Windows users must choose the NSIS installer to receive subsequent updates.
 
+Transient Apple ticket delivery failures are retried up to three times during
+building, stapling and validation. Interrupted direct notarytool submissions are
+not automatically resubmitted.
+
 Apple submission may take time; inspect the reported submission status before
 repeating an interrupted upload.
 

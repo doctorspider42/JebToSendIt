@@ -76,7 +76,7 @@ jobs:
           echo "APPLE_API_KEY=$key" >> "$GITHUB_ENV"
       - run: npm ci
       - name: Build, sign and notarize both apps
-        run: npm run build:mac -- --config.forceCodeSigning=true --config.mac.notarize=true
+        run: node tools/retry-apple.js npm run build:mac -- --config.forceCodeSigning=true --config.mac.notarize=true
       - name: Verify signed and stapled apps
         shell: bash
         run: |
@@ -85,7 +85,7 @@ jobs:
             codesign --display --verbose=4 "$app" 2>&1 | tee /tmp/signature.txt
             grep -q 'TeamIdentifier=7L5KF39DAR' /tmp/signature.txt
             grep -q 'runtime' /tmp/signature.txt
-            xcrun stapler validate "$app"
+            node tools/retry-apple.js xcrun stapler validate "$app"
             spctl --assess --type execute --verbose=2 "$app"
           done
       - name: Notarize and verify signed DMGs
