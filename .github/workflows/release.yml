@@ -39,7 +39,7 @@ jobs:
 
   macos:
     needs: validate
-    runs-on: macos-latest
+    runs-on: macos-15-intel
     timeout-minutes: 120
     env:
       # Same Developer ID team and secret names as Pitch Doctor / tyraX:
