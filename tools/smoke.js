@@ -6,7 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const settings = require('../src/main/settings');
-const { currentStats } = require('../src/main/stats');
+const { currentStats, localDay } = require('../src/main/stats');
 const { resolveAction } = require('../src/main/actions');
 const { createUpdates } = require('../src/main/updates');
 const { EventEmitter } = require('node:events');
@@ -30,7 +30,7 @@ app.whenReady().then(async () => {
   assert.deepEqual(resolveAction(cfg), { actionType: 'command', command: 'echo hello', scriptPath: '' });
   settings.setMany({ recordNotifications: false, stats: { today: 999 } });
   assert.equal(settings.getStats().today, undefined);
-  settings.setStats({ day: '2026-11-04', today: 7, record: 12 });
+  settings.setStats({ day: localDay(), today: 7, record: 12 });
 
   const wins = {};
   const errors = [];
